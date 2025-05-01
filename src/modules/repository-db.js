@@ -275,7 +275,6 @@ db.get = async (req, options, modelClass) => {
       .sort(sort)
       .select(select);
   }
-
   const response = {
     data: result,
   };

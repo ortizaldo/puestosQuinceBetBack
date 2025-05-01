@@ -20,6 +20,7 @@ import routesCompany from "controllers/company";
 import routesBetStubs from "controllers/bet-stubs";
 import routesBrooker from "controllers/brooker";
 import routesBrookerBet from "controllers/brooker-bet";
+import routesEvents from "controllers/events";
 
 const router = Router();
 
@@ -45,5 +46,6 @@ router.use("/companies", routesCompany);
 router.use("/bet-stubs", routesBetStubs);
 router.use("/brooker", routesBrooker);
 router.use("/brooker-bet", routesBrookerBet);
+router.use("/events", routesEvents);
 
 export default router;
