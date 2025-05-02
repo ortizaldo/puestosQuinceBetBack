@@ -16,10 +16,8 @@ function RestRouter(modelClassname, options = null, hashPassword = false) {
   }
 
   async function handlerPost(req, res) {
-    console.log("🚀 ~ handlerPost ~ req:", req)
     try {
       req.hashPassword = hashPassword;
-      console.log("🚀 ~ handlerPost ~ req.hashPassword:", req.hashPassword)
       const instance = await db.create(
         req,
         options,

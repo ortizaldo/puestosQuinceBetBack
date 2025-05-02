@@ -65,6 +65,7 @@ db.create = async (
 };
 
 db.createMany = async (req, options, modelClass) => {
+  console.log("🚀 ~ db.createMany= ~ req:", req.body)
   let fields = [];
   if (_.has(req.body, "fieldsDuplicated")) {
     fields = req.body.fieldsDuplicated;
@@ -83,8 +84,8 @@ db.createMany = async (req, options, modelClass) => {
   let result;
   if (!_.isArray(params)) {
     if (req.user && req.user._id) {
-      params.createdBy = req.user._id;
-      params.updatedBy = req.user._id;
+      // params.createdBy = req.user._id;
+      // params.updatedBy = req.user._id;
       req.body.createdAt = new Date();
     }
     result = await modelClass.create(params);
