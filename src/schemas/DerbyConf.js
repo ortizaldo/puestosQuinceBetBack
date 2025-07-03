@@ -14,17 +14,15 @@ const schema = new mongoose.Schema(
       required: true,
     },
     roosterConf: {
-      tolerance: { type: SchemaTypes.Double, required: true },
-      minWeight: { type: SchemaTypes.Double, required: true },
-      maxWeight: { type: SchemaTypes.Double, required: true },
+      tolerance: { type: Number, required: true },
+      minWeight: { type: Number, required: true },
+      maxWeight: { type: Number, required: true },
     },
   },
   { toObject: { virtuals: true }, toJSON: { virtuals: true }, timestamps: true }
 );
 
 schema.add(AdminFields);
-
-schema.plugin(autoIncrement, "derbyconf");
 
 const derbyConf = mongoose.model("derbyconf", schema);
 export default derbyConf;

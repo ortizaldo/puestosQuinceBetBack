@@ -292,6 +292,7 @@ db.get = async (req, options, modelClass) => {
 
 db.edit = async (req, options, modelClass) => {
   const { body } = req;
+  console.log("🚀 ~ db.edit= ~ body:", body)
 
   let instance = await modelClass
     .findOneAndUpdate(
@@ -305,6 +306,7 @@ db.edit = async (req, options, modelClass) => {
       }
     )
     .lean();
+  console.log('%cpuestosQuinceBetBack/src/modules/repository-db.js:309 instance', 'color: #007acc;', instance);
   if (!instance) {
     throw global.constants.response.recordNotFound;
   }
