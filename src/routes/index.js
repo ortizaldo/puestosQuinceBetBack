@@ -9,6 +9,7 @@ import {
 } from "controllers/auth/login";
 import routesUsers from "controllers/users";
 import routesDerby from "controllers/derby";
+import routesCompadres from "controllers/compadres";
 import routesDerbyConf from "controllers/derby-conf";
 import routesRoosters from "controllers/roosters";
 import routesRoosterRelease from "controllers/rooster-release";
@@ -32,9 +33,10 @@ router.route("/refresh-token").post(refreshToken);
 router.route("/get-access-token").get(getAccessToken);
 router.route("/logout").post(logout);
 //----------------ADMIN-------------------------------
-router.route("/upload").post(login, upload.single('file'));
+router.route("/upload").post(login, upload.single("file"));
 router.use("/users", routesUsers);
 router.use("/derby", routesDerby);
+router.use("/compadres", routesCompadres);
 router.use("/derby-conf", routesDerbyConf);
 router.use("/rooster", routesRoosters);
 router.use("/rooster-release", routesRoosterRelease);
