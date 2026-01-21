@@ -11,7 +11,9 @@ const schema = new mongoose.Schema(
     email: { type: String, required: true },
     hashedPassword: { type: String, required: false },
     typeUser: { type: String, required: false, default: "admin" },
+    roles: [{ type: String, required: true }],
     phoneNumber: { type: String, required: false },
+    emailVerified: { type: Boolean, required: false },
   },
   { toObject: { virtuals: true }, toJSON: { virtuals: true }, timestamps: true }
 );
