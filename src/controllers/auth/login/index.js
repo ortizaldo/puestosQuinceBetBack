@@ -7,6 +7,7 @@ import _ from "underscore";
 import ObjectID from "bson-objectid";
 
 exports.login = async (req, res) => {
+  const password = req.body.password;
   let err = {
     code: 422,
     title: "Login",
@@ -23,34 +24,41 @@ exports.login = async (req, res) => {
 
     if (!user) throw err;
 
-    if (await bcrypt.compare(req.body.password, user.hashedPassword)) {
-      const accessToken = generateAccessToken({
-        userId: user._id,
-        user: req.body.email,
-      });
-      const refreshToken = generateRefreshToken({
-        userId: user._id,
-        user: req.body.email,
-      });
+    if (!user)
+      return res
+        .status(401)
+        .json({ success: false, message: "Credenciales inválidas" });
+    if (user.disabled)
+      return res
+        .status(403)
+        .json({ success: false, message: "Usuario deshabilitado" });
 
-      req.body = {
-        user: user._id,
-        accessToken: accessToken,
-        refreshToken: refreshToken,
-      };
+    const ok = await bcrypt.compare(password, user.hashedPassword);
+    if (!ok)
+      return res
+        .status(401)
+        .json({ success: false, message: "Credenciales inválidas" });
 
-      //guardamos el token en la bd
-      await db.create(req, null, AccessToken);
+    console.log("User logged in:", user);
+    const payload = {
+      userId: user._id.toString(),
+      user: req.body.email,
+      role: user.role,
+    };
 
-      res.json({ user, accessToken: accessToken, refreshToken: refreshToken });
-    } else {
-      err = {
-        code: 422,
-        title: "Login",
-        message: "Contraseña incorrecta",
-      };
-      throw err;
-    }
+    const accessToken = generateAccessToken(payload);
+    const refreshToken = generateRefreshToken(payload);
+
+    req.body = {
+      user: user._id,
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+    };
+
+    //guardamos el token en la bd
+    await db.create(req, null, AccessToken);
+
+    res.json({ user, accessToken: accessToken, refreshToken: refreshToken });
   } catch (error) {
     resError(res, error);
   }
@@ -171,14 +179,16 @@ exports.logout = async (req, res) => {
   }
 };
 
-function generateAccessToken(user) {
-  return jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "15m" });
+function generateAccessToken(payload) {
+  return jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, {
+    expiresIn: "15m",
+  });
 }
 
 // refreshTokens
 let refreshTokens = [];
-function generateRefreshToken(user) {
-  const refreshToken = jwt.sign(user, process.env.REFRESH_TOKEN_SECRET, {
+function generateRefreshToken(payload) {
+  const refreshToken = jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, {
     expiresIn: "20m",
   });
   refreshTokens.push(refreshToken);
