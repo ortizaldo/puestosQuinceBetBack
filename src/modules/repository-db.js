@@ -15,7 +15,7 @@ db.create = async (
   req,
   options,
   modelClass,
-  filterOptions = { populate: null }
+  filterOptions = { populate: null },
 ) => {
   let fields = [];
   if (_.has(req.body, "fieldsDuplicated")) {
@@ -23,11 +23,11 @@ db.create = async (
   }
 
   const params = req.body;
-  console.log("🚀 ~ params:", params)
+  console.log("🚀 ~ params:", params);
 
   if (req.body.hashPassword) {
     params.hashedPassword = await bcrypt.hash(req.body.password, 10);
-    console.log("🚀 ~ params.hashedPassword:", params.hashedPassword)
+    console.log("🚀 ~ params.hashedPassword:", params.hashedPassword);
   }
 
   if (fields.length) {
@@ -65,7 +65,7 @@ db.create = async (
 };
 
 db.createMany = async (req, options, modelClass) => {
-  console.log("🚀 ~ db.createMany= ~ req:", req.body)
+  console.log("🚀 ~ db.createMany= ~ req:", req.body);
   let fields = [];
   if (_.has(req.body, "fieldsDuplicated")) {
     fields = req.body.fieldsDuplicated;
@@ -123,7 +123,7 @@ db.updateMany = async (req, options, modelClass) => {
           },
         ],
       },
-      req.body
+      req.body,
     )
     .lean();
 
@@ -145,6 +145,7 @@ db.updateMany = async (req, options, modelClass) => {
  * @return {Object} An object containing the retrieved data.
  */
 db.get = async (req, options, modelClass) => {
+  console.log("🚀 ~ db.get= ~ req:", req.query);
   const pk = _.has(req.params, "id") ? req.params.id : null;
   let filters = _.has(req.query, "filters")
     ? JSON.parse(req.query.filters)
@@ -222,7 +223,7 @@ db.get = async (req, options, modelClass) => {
           {},
           ...select.map((item) => ({
             [item]: 1,
-          }))
+          })),
         ),
         ...{
           deleted: 1,
@@ -292,7 +293,7 @@ db.get = async (req, options, modelClass) => {
 
 db.edit = async (req, options, modelClass) => {
   const { body } = req;
-  console.log("🚀 ~ db.edit= ~ body:", body)
+  console.log("🚀 ~ db.edit= ~ body:", body);
 
   let instance = await modelClass
     .findOneAndUpdate(
@@ -303,10 +304,14 @@ db.edit = async (req, options, modelClass) => {
       body,
       {
         new: true,
-      }
+      },
     )
     .lean();
-  console.log('%cpuestosQuinceBetBack/src/modules/repository-db.js:309 instance', 'color: #007acc;', instance);
+  console.log(
+    "%cpuestosQuinceBetBack/src/modules/repository-db.js:309 instance",
+    "color: #007acc;",
+    instance,
+  );
   if (!instance) {
     throw global.constants.response.recordNotFound;
   }
@@ -326,15 +331,15 @@ db.edit = async (req, options, modelClass) => {
 db.delete = async (req, options, modelClass) => {
   const { id: pk } = req.params;
   const filters = "filters" in req.query ? JSON.parse(req.query.filters) : {};
-  
+
   let items = [];
   if (pk !== undefined) {
     items = [pk];
-  }else{
+  } else {
     items = Array.isArray(req.query.items)
       ? req.query.items
       : JSON.parse(req.query.items);
-    if (items){
+    if (items) {
       _.each(items, (row) => {
         row = new Types.ObjectId(row);
       });
@@ -362,7 +367,7 @@ db.delete = async (req, options, modelClass) => {
       deleteBody(req.user ? req.user._id : null, true),
       {
         new: true,
-      }
+      },
     );
   }
 

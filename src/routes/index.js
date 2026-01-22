@@ -1,6 +1,7 @@
 import { Router } from "express";
 import multer from "multer";
-const auth = require("middleware/auth");
+const { auth, requireRole } = require("../middleware/auth");
+//const requireRole = require( "middlewares/requireRole");
 import {
   login,
   refreshToken,
@@ -34,20 +35,25 @@ router.route("/get-access-token").get(getAccessToken);
 router.route("/logout").post(logout);
 //----------------ADMIN-------------------------------
 router.route("/upload").post(login, upload.single("file"));
-router.use("/users", routesUsers);
-router.use("/derby", routesDerby);
-router.use("/compadres", routesCompadres);
-router.use("/derby-conf", routesDerbyConf);
-router.use("/rooster", routesRoosters);
-router.use("/rooster-release", routesRoosterRelease);
-router.use("/team", routesTeam);
-router.use("/country", routesCountry);
-router.use("/state", routesState);
-router.use("/municipality", routesMunicipality);
-router.use("/companies", routesCompany);
-router.use("/bet-stubs", routesBetStubs);
-router.use("/brooker", routesBrooker);
-router.use("/brooker-bet", routesBrookerBet);
-router.use("/events", routesEvents);
+router.use("/users", auth, requireRole("admin"), routesUsers);
+router.use("/derby", auth, requireRole("admin"), routesDerby);
+router.use("/compadres", auth, requireRole("admin"), routesCompadres);
+router.use("/derby-conf", auth, requireRole("admin"), routesDerbyConf);
+router.use("/rooster", auth, requireRole("admin"), routesRoosters);
+router.use(
+  "/rooster-release",
+  auth,
+  requireRole("admin"),
+  routesRoosterRelease,
+);
+router.use("/team", auth, requireRole("admin"), routesTeam);
+router.use("/country", auth, requireRole("admin"), routesCountry);
+router.use("/state", auth, requireRole("admin"), routesState);
+router.use("/municipality", auth, requireRole("admin"), routesMunicipality);
+router.use("/companies", auth, requireRole("admin"), routesCompany);
+router.use("/bet-stubs", auth, requireRole("admin"), routesBetStubs);
+router.use("/brooker", auth, requireRole("admin"), routesBrooker);
+router.use("/brooker-bet", auth, requireRole("admin"), routesBrookerBet);
+router.use("/events", auth, requireRole("admin"), routesEvents);
 
 export default router;

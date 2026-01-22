@@ -2,9 +2,10 @@
 // const jwks = require("jwks-rsa");
 
 import jwt from "jsonwebtoken";
-import User from "../schemas/Users"; // ajusta ruta
+import { db } from "modules";
+import User from "schemas/Users";
 
-module.exports = async (req, res, next) => {
+async function auth(req, res, next) {
   try {
     const authHeader = req.headers["authorization"];
 
@@ -44,9 +45,8 @@ module.exports = async (req, res, next) => {
     }
 
     // (Recomendado) Verifica que el usuario siga activo (evita que un token viejo funcione si lo deshabilitas)
-    const user = await User.findById(userId).select(
-      "_id role disabled deleted",
-    );
+    const { data } = await db.get(req, null, User);
+    const user = data[0];
     if (!user || user.deleted) {
       return res
         .status(401)
@@ -69,4 +69,21 @@ module.exports = async (req, res, next) => {
       .json({ success: false, message: "Auth error", detail: error.message });
   }
   //get token from request header
-}; //end of function
+} //end of function
+
+function requireRole(...roles) {
+  return (req, res, next) => {
+    if (!req.user?.id) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+    if (!req.user?.role) {
+      return res.status(403).json({ success: false, message: "Role missing" });
+    }
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({ success: false, message: "Forbidden" });
+    }
+    next();
+  };
+}
+
+module.exports = { auth, requireRole };
