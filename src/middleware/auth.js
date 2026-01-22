@@ -16,6 +16,8 @@ async function auth(req, res, next) {
     }
 
     const token = authHeader.split(" ")[1];
+    const scheme = authHeader.split(" ")[0];
+    console.log("🚀 ~ auth ~ scheme:", scheme);
     if (scheme !== "Bearer" || !token) {
       return res.status(401).json({
         success: false,
@@ -28,6 +30,7 @@ async function auth(req, res, next) {
     try {
       payload = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
     } catch (err) {
+      console.log("🚀 ~ auth ~ err:", err);
       const status = err.name === "TokenExpiredError" ? 401 : 403;
       return res.status(status).json({
         success: false,
@@ -35,9 +38,8 @@ async function auth(req, res, next) {
           err.name === "TokenExpiredError" ? "Token expired" : "Token invalid",
       });
     }
-
     // Normaliza el id venga como id o userId
-    const userId = payload.id || payload.userId || payload.sub;
+    const userId = payload.userId;
     if (!userId) {
       return res
         .status(401)
@@ -45,8 +47,8 @@ async function auth(req, res, next) {
     }
 
     // (Recomendado) Verifica que el usuario siga activo (evita que un token viejo funcione si lo deshabilitas)
-    const { data } = await db.get(req, null, User);
-    const user = data[0];
+    const { data } = await db.get({ params: { id: userId } }, null, User);
+    const user = data;
     if (!user || user.deleted) {
       return res
         .status(401)

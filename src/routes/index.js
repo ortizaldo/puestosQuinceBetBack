@@ -35,6 +35,7 @@ router.route("/get-access-token").get(getAccessToken);
 router.route("/logout").post(logout);
 //----------------ADMIN-------------------------------
 router.route("/upload").post(login, upload.single("file"));
+// router.use("/users", auth, requireRole("admin"), routesUsers);
 router.use("/users", auth, requireRole("admin"), routesUsers);
 router.use("/derby", auth, requireRole("admin"), routesDerby);
 router.use("/compadres", auth, requireRole("admin"), routesCompadres);
@@ -53,7 +54,7 @@ router.use("/municipality", auth, requireRole("admin"), routesMunicipality);
 router.use("/companies", auth, requireRole("admin"), routesCompany);
 router.use("/bet-stubs", auth, requireRole("admin"), routesBetStubs);
 router.use("/brooker", auth, requireRole("admin"), routesBrooker);
-router.use("/brooker-bet", auth, requireRole("admin"), routesBrookerBet);
+router.use("/brooker-bet", auth, routesBrookerBet);
 router.use("/events", auth, requireRole("admin"), routesEvents);
 
 export default router;

@@ -2,7 +2,6 @@ import { Router } from "express";
 import { resError, db } from "modules";
 import _ from "underscore";
 
-
 function RestRouter(modelClassname, options = null, hashPassword = false) {
   const router = Router();
   async function handlerGet(req, res) {
@@ -11,6 +10,7 @@ function RestRouter(modelClassname, options = null, hashPassword = false) {
 
       res.status(200).json(response);
     } catch (err) {
+      console.log("🚀 ~ handlerGet ~ err:", err);
       resError(res, err);
     }
   }
@@ -26,7 +26,7 @@ function RestRouter(modelClassname, options = null, hashPassword = false) {
           ? {
               populate: req.body.populateFields,
             }
-          : null
+          : null,
       );
 
       res.status(200).json({

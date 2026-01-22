@@ -39,7 +39,6 @@ exports.login = async (req, res) => {
         .status(401)
         .json({ success: false, message: "Credenciales inválidas" });
 
-    console.log("User logged in:", user);
     const payload = {
       userId: user._id.toString(),
       user: req.body.email,
@@ -181,7 +180,7 @@ exports.logout = async (req, res) => {
 
 function generateAccessToken(payload) {
   return jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, {
-    expiresIn: "15m",
+    expiresIn: "2h",
   });
 }
 

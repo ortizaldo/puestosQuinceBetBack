@@ -145,7 +145,6 @@ db.updateMany = async (req, options, modelClass) => {
  * @return {Object} An object containing the retrieved data.
  */
 db.get = async (req, options, modelClass) => {
-  console.log("🚀 ~ db.get= ~ req:", req.query);
   const pk = _.has(req.params, "id") ? req.params.id : null;
   let filters = _.has(req.query, "filters")
     ? JSON.parse(req.query.filters)
@@ -183,7 +182,6 @@ db.get = async (req, options, modelClass) => {
   const populate = _.has(req.query, "populate")
     ? JSON.parse(req.query.populate)
     : [];
-
   let pipelines = iteratorLookup(req, modelClass, populate);
 
   const filtersIncludedId = _.has(req.query, "filtersIncludedId")
