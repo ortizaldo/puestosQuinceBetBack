@@ -20,7 +20,5 @@ const schema = new mongoose.Schema(
 
 schema.add(AdminFields);
 
-schema.plugin(autoIncrement, "catalog");
-
 const catalog = mongoose.model("catalog", schema);
 export default catalog;
