@@ -5,7 +5,6 @@ import { autoIncrement } from "mongoose-plugin-autoinc";
 
 const schema = new mongoose.Schema(
   {
-    // company: { type: Schema.Types.ObjectId, ref: "company", default: null },
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
     email: { type: String, required: true },
@@ -15,7 +14,11 @@ const schema = new mongoose.Schema(
     phoneNumber: { type: String, required: false },
     emailVerified: { type: Boolean, required: false },
   },
-  { toObject: { virtuals: true }, toJSON: { virtuals: true }, timestamps: true }
+  {
+    toObject: { virtuals: true },
+    toJSON: { virtuals: true },
+    timestamps: true,
+  },
 );
 
 schema.add(AdminFields);
