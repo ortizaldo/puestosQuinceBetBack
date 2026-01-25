@@ -8,7 +8,30 @@ const schema = new mongoose.Schema(
     description: { type: String, required: true },
     records: { type: Number, required: true },
     metadata: {
-      fields: { type: [String], required: true },
+      select: { type: [String], required: true },
+      texts: {
+        title: { type: String, required: true },
+        headerDetails: { type: String, required: true },
+        emptyMessage: { type: String, required: true },
+      },
+      form: [
+        {
+          name: { type: String, required: true },
+        },
+      ],
+      endpoint: { type: String, required: true },
+      populate: [
+        {
+          path: { type: String, required: true },
+          select: { type: String, required: true },
+        },
+      ],
+      columns: [
+        {
+          field: { type: String, required: true },
+          header: { type: String, required: true },
+        },
+      ],
     },
   },
   {
