@@ -23,6 +23,7 @@ import routesBetStubs from "controllers/bet-stubs";
 import routesBrooker from "controllers/brooker";
 import routesBrookerBet from "controllers/brooker-bet";
 import routesEvents from "controllers/events";
+import routesCatalogs from "controllers/catalog";
 
 const router = Router();
 
@@ -56,5 +57,6 @@ router.use("/bet-stubs", auth, requireRole("admin"), routesBetStubs);
 router.use("/brooker", auth, requireRole("admin"), routesBrooker);
 router.use("/brooker-bet", auth, routesBrookerBet);
 router.use("/events", auth, requireRole("admin"), routesEvents);
+router.use("/catalogs", auth, requireRole("admin"), routesCatalogs);
 
 export default router;
