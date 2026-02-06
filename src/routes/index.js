@@ -49,7 +49,8 @@ router.use(
   routesRoosterRelease,
 );
 router.use("/team", auth, requireRole("admin"), routesTeam);
-router.use("/country", auth, requireRole("admin"), routesCountry);
+// router.use("/country", auth, requireRole("admin"), routesCountry);
+router.use("/country", routesCountry);
 router.use("/state", auth, requireRole("admin"), routesState);
 router.use("/municipality", auth, requireRole("admin"), routesMunicipality);
 router.use("/companies", auth, requireRole("admin"), routesCompany);
