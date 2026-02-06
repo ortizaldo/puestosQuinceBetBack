@@ -51,8 +51,10 @@ router.use(
 router.use("/team", auth, requireRole("admin"), routesTeam);
 // router.use("/country", auth, requireRole("admin"), routesCountry);
 router.use("/country", routesCountry);
-router.use("/state", auth, requireRole("admin"), routesState);
-router.use("/municipality", auth, requireRole("admin"), routesMunicipality);
+// router.use("/state", auth, requireRole("admin"), routesState);
+router.use("/state", routesState);
+// router.use("/municipality", auth, requireRole("admin"), routesMunicipality);
+router.use("/municipality", routesMunicipality);
 router.use("/companies", auth, requireRole("admin"), routesCompany);
 router.use("/bet-stubs", auth, requireRole("admin"), routesBetStubs);
 router.use("/brooker", auth, requireRole("admin"), routesBrooker);
