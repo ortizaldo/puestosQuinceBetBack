@@ -8,7 +8,7 @@ const schema = new mongoose.Schema({
 
   name: { type: String, required: true, index: true },
 
-  country_id: { type: Number, required: true, ref: "Country", index: true },
+  country_id: { type: Number, required: true, ref: "countries", index: true },
   country_code: { type: String, default: null, index: true }, // "AF"
   country_name: { type: String, default: null }, // "Afghanistan"
 
@@ -38,6 +38,17 @@ const schema = new mongoose.Schema({
 schema.index({ country_id: 1, name: 1 });
 schema.index({ country_code: 1 });
 schema.index({ iso3166_2: 1 }, { sparse: true });
+
+schema.virtual("country_data", {
+  ref: "countries",
+  localField: "country_id",
+  foreignField: "_id",
+  justOne: true,
+});
+
+// Para que virtuals salgan en JSON
+schema.set("toJSON", { virtuals: true });
+schema.set("toObject", { virtuals: true });
 
 schema.add(AdminFields);
 

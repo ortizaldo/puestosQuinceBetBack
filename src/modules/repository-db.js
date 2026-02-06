@@ -475,7 +475,16 @@ function buildLookup(req, modelClass, item) {
 function iteratorLookup(req, modelClass, array) {
   const result = [];
   array.forEach((a) => {
+    console.log(
+      "%cpuestosQuinceBetBack/src/modules/repository-db.js:478 a",
+      "color: #007acc;",
+      a,
+    );
     const referenceVirtualPath = modelClass.schema.virtualpath(a.path);
+    console.log(
+      "🚀 ~ iteratorLookup ~ referenceVirtualPath:",
+      referenceVirtualPath,
+    );
     const referencePath = modelClass.schema.path(a.path);
     let lookup = null;
     if (referenceVirtualPath) {
