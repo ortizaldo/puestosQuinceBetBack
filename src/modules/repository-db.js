@@ -169,7 +169,12 @@ db.get = async (req, options, modelClass) => {
 
   Object.keys(filtersId).map((key) => {
     const id = filtersId[key].value;
-    filtersId[key] = new Types.ObjectId(id);
+    if (!isNumber(id)) {
+      console.log("🚀 ~ db.get= ~ id:", id);
+      filtersId[key] = new Types.ObjectId(id);
+    } else {
+      filtersId[key] = id;
+    }
   });
 
   filters = { ...filters, ...filtersId };
@@ -475,16 +480,7 @@ function buildLookup(req, modelClass, item) {
 function iteratorLookup(req, modelClass, array) {
   const result = [];
   array.forEach((a) => {
-    console.log(
-      "%cpuestosQuinceBetBack/src/modules/repository-db.js:478 a",
-      "color: #007acc;",
-      a,
-    );
     const referenceVirtualPath = modelClass.schema.virtualpath(a.path);
-    console.log(
-      "🚀 ~ iteratorLookup ~ referenceVirtualPath:",
-      referenceVirtualPath,
-    );
     const referencePath = modelClass.schema.path(a.path);
     let lookup = null;
     if (referenceVirtualPath) {
@@ -503,6 +499,10 @@ function iteratorLookup(req, modelClass, array) {
     }
   });
   return result;
+}
+
+function isNumber(value) {
+  return Number.isInteger(Number(value));
 }
 
 export default db;
