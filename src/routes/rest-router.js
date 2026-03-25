@@ -33,6 +33,7 @@ function RestRouter(modelClassname, options = null, hashPassword = false) {
         data: instance,
       });
     } catch (err) {
+      console.log("%csrc/routes/rest-router.js:36 err", "color: #007acc;", err);
       resError(res, err);
     }
   }

@@ -8,6 +8,8 @@ import {
   findDuplicatedCustom,
   findDuplicatedOnUpdated,
 } from "modules";
+require("core-js/stable");
+require("regenerator-runtime/runtime");
 
 const db = {};
 
@@ -23,11 +25,10 @@ db.create = async (
   }
 
   const params = req.body;
-  console.log("🚀 ~ params:", params);
 
   if (req.body.hashPassword) {
     params.hashedPassword = await bcrypt.hash(req.body.password, 10);
-    console.log("🚀 ~ params.hashedPassword:", params.hashedPassword);
+    // console.log("🚀 ~ params.hashedPassword:", params.hashedPassword);
   }
 
   if (fields.length) {
@@ -51,7 +52,7 @@ db.create = async (
   const modelData = new modelClass(params);
   let data = await modelData.save();
 
-  const query = modelClass.findById(data._id);
+  const query = modelClass.findOne({ _id: data._id });
 
   if (filterOptions && filterOptions.populate) {
     _.each(filterOptions.populate, function (row) {
@@ -65,7 +66,7 @@ db.create = async (
 };
 
 db.createMany = async (req, options, modelClass) => {
-  console.log("🚀 ~ db.createMany= ~ req:", req.body);
+  // console.log("🚀 ~ db.createMany= ~ req:", req.body);
   let fields = [];
   if (_.has(req.body, "fieldsDuplicated")) {
     fields = req.body.fieldsDuplicated;
@@ -145,21 +146,33 @@ db.updateMany = async (req, options, modelClass) => {
  * @return {Object} An object containing the retrieved data.
  */
 db.get = async (req, options, modelClass) => {
+  // Helper robusto: castea "142" -> 142 (Number) o -> ObjectId si no es numérico
+  const castId = (v) => {
+    if (v === null || v === undefined) return v;
+    if (typeof v === "number") return v;
+
+    const s = String(v).trim();
+    // si es entero/decimal válido, lo tratamos como Number (para tus catálogos con _id numérico)
+    if (s !== "" && !Number.isNaN(Number(s))) return Number(s);
+
+    return new Types.ObjectId(s);
+  };
+
   const pk = _.has(req.params, "id") ? req.params.id : null;
+
   let filters = _.has(req.query, "filters")
     ? JSON.parse(req.query.filters)
     : {};
+
   const nin = _.has(req.query, "nin") ? JSON.parse(req.query.nin) : {};
 
-  if (_.has(nin, "_id")) {
-    const ids = [];
-
-    _.each(nin._id.$nin, (row) => {
-      ids.push(new Types.ObjectId(row));
-    });
-
-    nin._id.$nin = ids;
-
+  // ✅ nin._id.$nin puede traer numbers u objectIds en string
+  if (
+    _.has(nin, "_id") &&
+    _.has(nin._id, "$nin") &&
+    Array.isArray(nin._id.$nin)
+  ) {
+    nin._id.$nin = nin._id.$nin.map(castId);
     filters = { ...filters, ...nin };
   }
 
@@ -167,14 +180,10 @@ db.get = async (req, options, modelClass) => {
     ? JSON.parse(req.query.filtersId)
     : {};
 
-  Object.keys(filtersId).map((key) => {
-    const id = filtersId[key].value;
-    if (!isNumber(id)) {
-      console.log("🚀 ~ db.get= ~ id:", id);
-      filtersId[key] = new Types.ObjectId(id);
-    } else {
-      filtersId[key] = id;
-    }
+  // ✅ filtersId: convierte cada value a Number u ObjectId
+  Object.keys(filtersId).forEach((key) => {
+    const id = filtersId[key]?.value;
+    if (id !== undefined) filtersId[key] = castId(id);
   });
 
   filters = { ...filters, ...filtersId };
@@ -187,19 +196,18 @@ db.get = async (req, options, modelClass) => {
   const populate = _.has(req.query, "populate")
     ? JSON.parse(req.query.populate)
     : [];
+
   let pipelines = iteratorLookup(req, modelClass, populate);
 
   const filtersIncludedId = _.has(req.query, "filtersIncludedId")
     ? JSON.parse(req.query.filtersIncludedId)
     : null;
-  if (filtersIncludedId) {
-    const query = {
-      $in: [
-        "$_id",
-        filtersIncludedId.map((item) => new Types.ObjectId(item)()),
-      ],
-    };
-    pipelines.push({ $match: { $expr: query } });
+
+  // ✅ match _id IN (numbers u objectIds)
+  if (Array.isArray(filtersIncludedId) && filtersIncludedId.length > 0) {
+    pipelines.push({
+      $match: { _id: { $in: filtersIncludedId.map(castId) } },
+    });
   }
 
   const sort = _.has(req.query, "sort") ? JSON.parse(req.query.sort) : null;
@@ -210,16 +218,15 @@ db.get = async (req, options, modelClass) => {
     });
     pipelines = [
       ...pipelines,
-      ...[
-        {
-          $sort: operatorSort,
-        },
-      ],
+      {
+        $sort: operatorSort,
+      },
     ];
   }
+
   const select = _.has(req.query, "select") ? JSON.parse(req.query.select) : [];
 
-  if (select.length > 0) {
+  if (Array.isArray(select) && select.length > 0) {
     const projects = {
       $project: {
         ...Object.assign(
@@ -228,61 +235,45 @@ db.get = async (req, options, modelClass) => {
             [item]: 1,
           })),
         ),
-        ...{
-          deleted: 1,
-        },
+        deleted: 1,
       },
     };
-    pipelines = [...pipelines, ...[projects]];
+    pipelines = [...pipelines, projects];
   }
 
-  pipelines = [
-    ...[
-      {
-        $match: filters,
-      },
-      ...pipelines,
-    ],
-  ];
+  pipelines = [{ $match: filters }, ...pipelines];
 
   let result;
+
   if (!pk) {
     const limit = _.has(req.query, "limit") ? Number(req.query.limit) : 0;
     const skip = _.has(req.query, "skip") ? Number(req.query.skip) : 0;
-    if (skip >= 0) {
-      pipelines = [
-        ...pipelines,
-        ...[
-          {
-            $skip: skip,
-          },
-        ],
-      ];
-    }
-    if (limit > 0) {
-      pipelines = [
-        ...pipelines,
-        ...[
-          {
-            $limit: limit,
-          },
-        ],
-      ];
-    }
+
+    if (skip >= 0) pipelines.push({ $skip: skip });
+    if (limit > 0) pipelines.push({ $limit: limit });
+
     result = await modelClass.aggregate(pipelines);
   } else {
-    result = await modelClass
-      .findById(pk)
-      .collation({
-        locale: "en",
-      })
-      .populate(populate)
-      .sort(sort)
-      .select(select);
+    // ✅ pk puede ser "142" o un ObjectId string
+    const pkParsed = castId(pk);
+    // result = await modelClass
+    //   .findOne({ _id: pkParsed })
+    //   .collation({ locale: "en" })
+    //   .populate(populate)
+    //   // sort en findOne no aplica realmente, pero lo dejo por compatibilidad
+    //   .sort(sort || undefined)
+    //   .select(select);
+    // Agregar el match por pk al inicio de los pipelines
+    const pkPipelines = [
+      { $match: { _id: pkParsed } },
+      ...pipelines, // ya contienen los $lookup del populate
+    ];
+
+    const resultArr = await modelClass.aggregate(pkPipelines);
+    result = resultArr[0] || null;
   }
-  const response = {
-    data: result,
-  };
+
+  const response = { data: result };
 
   if (
     _.has(req.query, "total") ||
@@ -291,12 +282,13 @@ db.get = async (req, options, modelClass) => {
   ) {
     response.total = await modelClass.countDocuments(filters);
   }
+
   return response;
 };
 
 db.edit = async (req, options, modelClass) => {
   const { body } = req;
-  console.log("🚀 ~ db.edit= ~ body:", body);
+  // console.log("🚀 ~ db.edit= ~ body:", body);
 
   let instance = await modelClass
     .findOneAndUpdate(
@@ -310,11 +302,11 @@ db.edit = async (req, options, modelClass) => {
       },
     )
     .lean();
-  console.log(
-    "%cpuestosQuinceBetBack/src/modules/repository-db.js:309 instance",
-    "color: #007acc;",
-    instance,
-  );
+  // console.log(
+  //   "%cpuestosQuinceBetBack/src/modules/repository-db.js:309 instance",
+  //   "color: #007acc;",
+  //   instance,
+  // );
   if (!instance) {
     throw global.constants.response.recordNotFound;
   }
@@ -323,7 +315,7 @@ db.edit = async (req, options, modelClass) => {
   if (_.has(req.body.data, "populateFields")) {
     populate = req.body.populateFields;
     instance = await modelClass
-      .findById(instance._id)
+      .findOne({ _id: instance._id })
       .populate(populate)
       .lean();
   }
@@ -427,53 +419,80 @@ function buildVirtualLookup(req, modelClass, item, referenceVirtualPath) {
   };
 }
 
+// Resuelve schema.path() para paths anidados como "address.country"
+function resolveSchemaPath(modelClass, pathStr) {
+  const parts = pathStr.split(".");
+  let current = modelClass.schema;
+
+  for (let i = 0; i < parts.length; i++) {
+    const direct = current.path(parts.slice(i).join("."));
+    if (direct) return direct;
+
+    // bajar un nivel al subdocumento
+    const nested = current.path(parts[i]);
+    if (nested && nested.schema) {
+      current = nested.schema;
+    } else {
+      return null;
+    }
+  }
+  return null;
+}
+
+function getCollectionFromRef(ref) {
+  const mongoose = require("mongoose");
+  try {
+    return mongoose.model(ref).collection.name;
+  } catch (e) {
+    // fallback: pluralizar en minúsculas
+    return ref.toLowerCase() + "s";
+  }
+}
+
 function buildLookup(req, modelClass, item) {
-  const referencePath = modelClass.schema.path(item.path);
+  const referencePath = resolveSchemaPath(modelClass, item.path);
+  // console.log("🚀 ~ buildLookup ~ referencePath:", referencePath);
+
+  if (!referencePath) {
+    throw new Error(`Cannot resolve schema path: ${item.path}`);
+  }
+
   const referenceOptions = referencePath.options;
-  const reference =
+  const ref =
     referencePath.instance === "Array"
       ? referenceOptions.type[0].ref
       : referenceOptions.ref;
-  const model = reference;
+
+  const collectionName = getCollectionFromRef(ref);
+
   let params = {
-    from: model,
+    from: collectionName, // ✅ nombre real de colección
     as: item.path,
   };
+
   if (Array.isArray(item.populate)) {
-    // eslint-disable-next-line
-    const childPipelines = iteratorLookup(req, model, item.populate);
+    const childPipelines = iteratorLookup(
+      req,
+      mongoose.model(ref),
+      item.populate,
+    );
     params = {
       ...params,
-      ...{
-        let: {
-          foreignId: `$${item.path}`,
-        },
-        pipeline: [
-          ...[
-            {
-              $match: {
-                $expr: {
-                  $eq: ["$_id", "$$foreignId"],
-                },
-              },
-            },
-          ],
-          ...childPipelines,
-        ],
-      },
+      let: { foreignId: `$${item.path}` },
+      pipeline: [
+        { $match: { $expr: { $eq: ["$_id", "$$foreignId"] } } },
+        ...childPipelines,
+      ],
     };
   } else {
     params = {
       ...params,
-      ...{
-        localField: item.path,
-        foreignField: "_id",
-      },
+      localField: item.path,
+      foreignField: "_id",
     };
   }
-  return {
-    $lookup: params,
-  };
+
+  return { $lookup: params };
 }
 
 // to enable deep level flatten use recursion with reduce and concat
@@ -488,7 +507,12 @@ function iteratorLookup(req, modelClass, array) {
     } else {
       lookup = buildLookup(req, modelClass, a);
       result.push(lookup);
-      if (referencePath.instance === "ObjectId") {
+      const resolvedPath = resolveSchemaPath(modelClass, a.path);
+      if (
+        resolvedPath &&
+        (resolvedPath.instance === "ObjectId" ||
+          resolvedPath.instance === "Number")
+      ) {
         result.push({
           $unwind: {
             path: `$${a.path}`,
@@ -496,6 +520,14 @@ function iteratorLookup(req, modelClass, array) {
           },
         });
       }
+      // if (referencePath.instance === "ObjectId") {
+      //   result.push({
+      //     $unwind: {
+      //       path: `$${a.path}`,
+      //       preserveNullAndEmptyArrays: true,
+      //     },
+      //   });
+      // }
     }
   });
   return result;

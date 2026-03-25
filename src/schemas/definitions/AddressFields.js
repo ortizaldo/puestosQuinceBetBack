@@ -9,16 +9,15 @@ export default {
       type: String,
     },
     country: {
-      type: Schema.Types.ObjectId,
+      type: Number,
+      required: true,
       ref: "Country",
     },
-    state: {
-      type: Schema.Types.ObjectId,
-      ref: "State",
-    },
+    state: { type: Number, required: true, ref: "state" },
     municipality: {
-      type: Schema.Types.ObjectId,
-      ref: "Municipality",
+      type: Number,
+      required: true,
+      ref: "cities",
     },
   },
 };

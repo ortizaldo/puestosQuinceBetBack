@@ -12,6 +12,7 @@ const schema = new mongoose.Schema(
     typeUser: { type: String, required: false, default: "admin" },
     roles: [{ type: String, required: true }],
     phoneNumber: { type: String, required: false },
+    birth: { type: String, required: false },
     emailVerified: { type: Boolean, required: false },
   },
   {
