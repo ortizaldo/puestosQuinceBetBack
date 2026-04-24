@@ -8,8 +8,7 @@ const config = {
     ],
   ],
   presets: [
-    [
-      "@babel/preset-env",
+    [      "@babel/preset-env",
       {
         targets: {
           esmodules: true,

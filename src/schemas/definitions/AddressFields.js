@@ -10,13 +10,13 @@ export default {
     },
     country: {
       type: Number,
-      required: true,
+      required: false,
       ref: "Country",
     },
-    state: { type: Number, required: true, ref: "state" },
+    state: { type: Number, required: false, ref: "state" },
     municipality: {
       type: Number,
-      required: true,
+      required: false,
       ref: "cities",
     },
   },

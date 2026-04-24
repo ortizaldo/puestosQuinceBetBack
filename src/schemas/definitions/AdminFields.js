@@ -14,4 +14,4 @@ const AdminFieldsSchema = new mongoose.Schema({
   disabledBy: { type: Schema.Types.ObjectId, ref: "user", default: null },
 });
 
-module.exports = AdminFieldsSchema;
+export default AdminFieldsSchema;

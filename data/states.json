@@ -1,0 +1,162 @@
+[
+  {
+    "id": 1000,
+    "name": "Aguascalientes",
+    "country_id": 142
+  },
+  {
+    "id": 1001,
+    "name": "Baja California",
+    "country_id": 142
+  },
+  {
+    "id": 1002,
+    "name": "Baja California Sur",
+    "country_id": 142
+  },
+  {
+    "id": 1003,
+    "name": "Campeche",
+    "country_id": 142
+  },
+  {
+    "id": 1004,
+    "name": "Chiapas",
+    "country_id": 142
+  },
+  {
+    "id": 1005,
+    "name": "Chihuahua",
+    "country_id": 142
+  },
+  {
+    "id": 1006,
+    "name": "Ciudad de México",
+    "country_id": 142
+  },
+  {
+    "id": 1007,
+    "name": "Coahuila de Zaragoza",
+    "country_id": 142
+  },
+  {
+    "id": 1008,
+    "name": "Colima",
+    "country_id": 142
+  },
+  {
+    "id": 1009,
+    "name": "Durango",
+    "country_id": 142
+  },
+  {
+    "id": 1010,
+    "name": "Estado de México",
+    "country_id": 142
+  },
+  {
+    "id": 1011,
+    "name": "Guanajuato",
+    "country_id": 142
+  },
+  {
+    "id": 1012,
+    "name": "Guerrero",
+    "country_id": 142
+  },
+  {
+    "id": 1013,
+    "name": "Hidalgo",
+    "country_id": 142
+  },
+  {
+    "id": 1014,
+    "name": "Jalisco",
+    "country_id": 142
+  },
+  {
+    "id": 1015,
+    "name": "Michoacán de Ocampo",
+    "country_id": 142
+  },
+  {
+    "id": 1016,
+    "name": "Morelos",
+    "country_id": 142
+  },
+  {
+    "id": 1017,
+    "name": "Nayarit",
+    "country_id": 142
+  },
+  {
+    "id": 1018,
+    "name": "Nuevo León",
+    "country_id": 142
+  },
+  {
+    "id": 1019,
+    "name": "Oaxaca",
+    "country_id": 142
+  },
+  {
+    "id": 1020,
+    "name": "Puebla",
+    "country_id": 142
+  },
+  {
+    "id": 1021,
+    "name": "Querétaro",
+    "country_id": 142
+  },
+  {
+    "id": 1022,
+    "name": "Quintana Roo",
+    "country_id": 142
+  },
+  {
+    "id": 1023,
+    "name": "San Luis Potosí",
+    "country_id": 142
+  },
+  {
+    "id": 1024,
+    "name": "Sinaloa",
+    "country_id": 142
+  },
+  {
+    "id": 1025,
+    "name": "Sonora",
+    "country_id": 142
+  },
+  {
+    "id": 1026,
+    "name": "Tabasco",
+    "country_id": 142
+  },
+  {
+    "id": 1027,
+    "name": "Tamaulipas",
+    "country_id": 142
+  },
+  {
+    "id": 1028,
+    "name": "Tlaxcala",
+    "country_id": 142
+  },
+  {
+    "id": 1029,
+    "name": "Veracruz de Ignacio de la Llave",
+    "country_id": 142
+  },
+  {
+    "id": 1030,
+    "name": "Yucatán",
+    "country_id": 142
+  },
+  {
+    "id": 1031,
+    "name": "Zacatecas",
+    "country_id": 142
+  }
+]
