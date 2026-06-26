@@ -9,7 +9,11 @@ const schema = new mongoose.Schema(
     lastName: { type: String, required: true },
     email: { type: String, required: true },
     hashedPassword: { type: String, required: false },
-    typeUser: { type: String, required: false, default: "admin" },
+    typeUser: {
+      type: String,
+      enum: ['ADMIN', 'OPERADOR', 'USUARIO'],
+      default: 'USUARIO'
+    },
     roles: [{ type: String, required: true }],
     phoneNumber: { type: String, required: false },
     birth: { type: String, required: false },

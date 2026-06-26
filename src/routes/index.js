@@ -49,23 +49,14 @@ router.use(
   routesRoosterRelease,
 );
 router.use("/team", auth, requireRole("admin"), routesTeam);
-// router.use("/country", auth, requireRole("admin"), routesCountry);
-router.use("/country", routesCountry);
-// router.use("/state", auth, requireRole("admin"), routesState);
-router.use("/state", routesState);
-// router.use("/municipality", auth, requireRole("admin"), routesMunicipality);
-router.use("/municipality", routesMunicipality);
-// router.use("/companies", auth, requireRole("admin"), routesCompany);
-router.use("/companies", routesCompany);
-// router.use("/bet-stubs", auth, requireRole("admin"), routesBetStubs);
-router.use("/bet-stubs", routesBetStubs);
-// router.use("/brooker", auth, requireRole("admin"), routesBrooker);
-router.use("/brooker", routesBrooker);
-// router.use("/brooker-bet", auth, routesBrookerBet);
-router.use("/brooker-bet", routesBrookerBet);
-// router.use("/events", auth, requireRole("admin"), routesEvents);
-router.use("/events", routesEvents);
-// router.use("/catalogs", auth, requireRole("admin"), routesCatalogs);
-router.use("/catalogs", routesCatalogs);
+router.use("/country", auth, requireRole("admin"), routesCountry);
+router.use("/state", auth, requireRole("admin"), routesState);
+router.use("/municipality", auth, requireRole("admin"), routesMunicipality);
+router.use("/companies", auth, requireRole("admin"), routesCompany);
+router.use("/bet-stubs", auth, requireRole("admin"), routesBetStubs);
+router.use("/brooker", auth, requireRole("admin"), routesBrooker);
+router.use("/brooker-bet", auth, routesBrookerBet);
+router.use("/events", auth, requireRole("admin"), routesEvents);
+router.use("/catalogs", auth, requireRole("admin"), routesCatalogs);
 
 export default router;

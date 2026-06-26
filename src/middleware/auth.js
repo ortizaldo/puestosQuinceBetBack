@@ -78,10 +78,10 @@ function requireRole(...roles) {
     if (!req.user?.id) {
       return res.status(401).json({ success: false, message: "Unauthorized" });
     }
-    if (!req.user?.role) {
+    if (!req.user?.typeUser) {
       return res.status(403).json({ success: false, message: "Role missing" });
     }
-    if (!roles.includes(req.user.role)) {
+    if (!roles.includes(req.user.typeUser)) {
       return res.status(403).json({ success: false, message: "Forbidden" });
     }
     next();
