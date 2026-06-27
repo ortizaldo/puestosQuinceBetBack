@@ -36,27 +36,27 @@ router.route("/get-access-token").get(getAccessToken);
 router.route("/logout").post(logout);
 //----------------ADMIN-------------------------------
 router.route("/upload").post(login, upload.single("file"));
-// router.use("/users", auth, requireRole("admin"), routesUsers);
+// router.use("/users", auth, requireRole("ADMIN"), routesUsers);
 router.use("/users", routesUsers);
-router.use("/derby", auth, requireRole("admin"), routesDerby);
-router.use("/compadres", auth, requireRole("admin"), routesCompadres);
-router.use("/derby-conf", auth, requireRole("admin"), routesDerbyConf);
-router.use("/rooster", auth, requireRole("admin"), routesRoosters);
+router.use("/derby", auth, requireRole("ADMIN"), routesDerby);
+router.use("/compadres", auth, requireRole("ADMIN"), routesCompadres);
+router.use("/derby-conf", auth, requireRole("ADMIN"), routesDerbyConf);
+router.use("/rooster", auth, requireRole("ADMIN"), routesRoosters);
 router.use(
   "/rooster-release",
   auth,
-  requireRole("admin"),
+  requireRole("ADMIN"),
   routesRoosterRelease,
 );
-router.use("/team", auth, requireRole("admin"), routesTeam);
-router.use("/country", auth, requireRole("admin"), routesCountry);
-router.use("/state", auth, requireRole("admin"), routesState);
-router.use("/municipality", auth, requireRole("admin"), routesMunicipality);
-router.use("/companies", auth, requireRole("admin"), routesCompany);
-router.use("/bet-stubs", auth, requireRole("admin"), routesBetStubs);
-router.use("/brooker", auth, requireRole("admin"), routesBrooker);
+router.use("/team", auth, requireRole("ADMIN"), routesTeam);
+router.use("/country", auth, requireRole("ADMIN"), routesCountry);
+router.use("/state", auth, requireRole("ADMIN"), routesState);
+router.use("/municipality", auth, requireRole("ADMIN"), routesMunicipality);
+router.use("/companies", auth, requireRole("ADMIN"), routesCompany);
+router.use("/bet-stubs", auth, requireRole("ADMIN"), routesBetStubs);
+router.use("/brooker", auth, requireRole("ADMIN"), routesBrooker);
 router.use("/brooker-bet", auth, routesBrookerBet);
-router.use("/events", auth, requireRole("admin"), routesEvents);
-router.use("/catalogs", auth, requireRole("admin"), routesCatalogs);
+router.use("/events", auth, requireRole("ADMIN"), routesEvents);
+router.use("/catalogs", auth, requireRole("ADMIN"), routesCatalogs);
 
 export default router;

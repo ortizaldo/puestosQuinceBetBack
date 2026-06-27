@@ -42,7 +42,7 @@ exports.login = async (req, res) => {
     const payload = {
       userId: user._id.toString(),
       user: req.body.email,
-      role: user.role,
+      role: user.typeUser,
     };
 
     const accessToken = generateAccessToken(payload);

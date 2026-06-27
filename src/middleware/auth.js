@@ -72,16 +72,17 @@ async function auth(req, res, next) {
   }
   //get token from request header
 } //end of function
-
 function requireRole(...roles) {
   return (req, res, next) => {
+    // console.log('%cpuestosQuinceBetBack/src/middleware/auth.js:75 req.user', 'color: #007acc;', req.user);
+
     if (!req.user?.id) {
       return res.status(401).json({ success: false, message: "Unauthorized" });
     }
-    if (!req.user?.typeUser) {
+    if (!req.user?.role) {
       return res.status(403).json({ success: false, message: "Role missing" });
     }
-    if (!roles.includes(req.user.typeUser)) {
+    if (!roles.includes(req.user.role)) {
       return res.status(403).json({ success: false, message: "Forbidden" });
     }
     next();
