@@ -1,6 +1,7 @@
 import { model, Schema, Types } from "mongoose";
 import { ObjectId } from "mongodb";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 import _ from "underscore";
 
 import {
@@ -42,10 +43,9 @@ db.create = async (
       }
     }
   }
-
-  if (req.user && req.user._id) {
-    params.createdBy = req.user._id;
-    params.updatedBy = req.user._id;
+  const payload = getPayloadFromToken(req);
+  if (payload && payload.userId) {
+    params.createdBy = payload.userId;
     params.createdAt = new Date();
   }
 
@@ -287,26 +287,25 @@ db.get = async (req, options, modelClass) => {
 };
 
 db.edit = async (req, options, modelClass) => {
+  const payload = getPayloadFromToken(req);
   const { body } = req;
-  // console.log("🚀 ~ db.edit= ~ body:", body);
-
+  let updBody = {
+    ...body,
+    updatedBy: payload ? payload.userId : null,
+    updatedAt: new Date(),
+  };
   let instance = await modelClass
     .findOneAndUpdate(
       {
         _id: new Types.ObjectId(req.params.id),
         deleted: false,
       },
-      body,
+      updBody,
       {
         new: true,
       },
     )
     .lean();
-  // console.log(
-  //   "%cpuestosQuinceBetBack/src/modules/repository-db.js:309 instance",
-  //   "color: #007acc;",
-  //   instance,
-  // );
   if (!instance) {
     throw global.constants.response.recordNotFound;
   }
@@ -324,6 +323,7 @@ db.edit = async (req, options, modelClass) => {
 };
 
 db.delete = async (req, options, modelClass) => {
+  const payload = getPayloadFromToken(req);
   const { id: pk } = req.params;
   const filters = "filters" in req.query ? JSON.parse(req.query.filters) : {};
 
@@ -359,7 +359,7 @@ db.delete = async (req, options, modelClass) => {
           },
         ],
       },
-      deleteBody(req.user ? req.user._id : null, true),
+      deleteBody(payload ? payload.userId : null, true),
       {
         new: true,
       },
@@ -417,6 +417,29 @@ function buildVirtualLookup(req, modelClass, item, referenceVirtualPath) {
   return {
     $lookup: params,
   };
+}
+
+function getPayloadFromToken(req) {
+  const authHeader = req.headers["authorization"];
+  if (!authHeader) {
+    throw new Error("Missing Authorization header");
+  }
+
+  const token = authHeader.split(" ")[1];
+  const scheme = authHeader.split(" ")[0];
+  if (scheme !== "Bearer" || !token) {
+    throw new Error("Invalid Authorization format. Use: Bearer <token>");
+  }
+
+  try {
+    const payload = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    return payload;
+  } catch (err) {
+    console.log("🚀 ~ getPayloadFromToken ~ err:", err);
+    throw new Error(
+      err.name === "TokenExpiredError" ? "Token expired" : "Token invalid",
+    );
+  }
 }
 
 // Resuelve schema.path() para paths anidados como "address.country"

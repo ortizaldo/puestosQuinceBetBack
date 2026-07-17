@@ -17,7 +17,6 @@ async function auth(req, res, next) {
 
     const token = authHeader.split(" ")[1];
     const scheme = authHeader.split(" ")[0];
-    console.log("🚀 ~ auth ~ scheme:", scheme);
     if (scheme !== "Bearer" || !token) {
       return res.status(401).json({
         success: false,
