@@ -43,8 +43,12 @@ db.create = async (
       }
     }
   }
-  const payload = getPayloadFromToken(req);
-  if (payload && payload.userId) {
+
+  const authHeader = req.headers["authorization"];
+  console.log("🚀 ~ authHeader:", authHeader);
+  let payload = null;
+  if (!_.isUndefined(authHeader) && !_.isNull(authHeader)) {
+    payload = getPayloadFromToken(req);
     params.createdBy = payload.userId;
     params.createdAt = new Date();
   }
@@ -287,7 +291,12 @@ db.get = async (req, options, modelClass) => {
 };
 
 db.edit = async (req, options, modelClass) => {
-  const payload = getPayloadFromToken(req);
+  const authHeader = req.headers["authorization"];
+  console.log("🚀 ~ authHeader:", authHeader);
+  let payload = null;
+  if (!authHeader) {
+    payload = getPayloadFromToken(req);
+  }
   const { body } = req;
   let updBody = {
     ...body,
@@ -323,7 +332,12 @@ db.edit = async (req, options, modelClass) => {
 };
 
 db.delete = async (req, options, modelClass) => {
-  const payload = getPayloadFromToken(req);
+  const authHeader = req.headers["authorization"];
+  console.log("🚀 ~ authHeader:", authHeader);
+  let payload = null;
+  if (!authHeader) {
+    payload = getPayloadFromToken(req);
+  }
   const { id: pk } = req.params;
   const filters = "filters" in req.query ? JSON.parse(req.query.filters) : {};
 

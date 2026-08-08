@@ -11,8 +11,13 @@ const schema = new mongoose.Schema(
     hashedPassword: { type: String, required: false },
     typeUser: {
       type: String,
-      enum: ['ADMIN', 'OPERADOR', 'USUARIO'],
-      default: 'USUARIO'
+      enum: ["ADMIN", "OPERADOR", "USUARIO"],
+      default: "USUARIO",
+    },
+    status: {
+      type: String,
+      enum: ["PENDING_ACTIVATION", "ACTIVE", "INACTIVE", "BLOCKED"],
+      default: "PENDING_ACTIVATION",
     },
     roles: [{ type: String, required: true }],
     phoneNumber: { type: String, required: false },
