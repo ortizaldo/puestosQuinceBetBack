@@ -150,6 +150,7 @@ db.updateMany = async (req, options, modelClass) => {
  * @return {Object} An object containing the retrieved data.
  */
 db.get = async (req, options, modelClass) => {
+  console.log("🚀 ~ modelClass:", modelClass);
   // Helper robusto: castea "142" -> 142 (Number) o -> ObjectId si no es numérico
   const castId = (v) => {
     if (v === null || v === undefined) return v;
@@ -260,14 +261,6 @@ db.get = async (req, options, modelClass) => {
   } else {
     // ✅ pk puede ser "142" o un ObjectId string
     const pkParsed = castId(pk);
-    // result = await modelClass
-    //   .findOne({ _id: pkParsed })
-    //   .collation({ locale: "en" })
-    //   .populate(populate)
-    //   // sort en findOne no aplica realmente, pero lo dejo por compatibilidad
-    //   .sort(sort || undefined)
-    //   .select(select);
-    // Agregar el match por pk al inicio de los pipelines
     const pkPipelines = [
       { $match: { _id: pkParsed } },
       ...pipelines, // ya contienen los $lookup del populate
