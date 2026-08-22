@@ -6,6 +6,9 @@ import {
   login,
   refreshToken,
   logout,
+  handlerActivateEmail,
+  activation,
+  activateAccount,
   getAccessToken,
 } from "controllers/auth/login";
 import routesUsers from "controllers/users";
@@ -34,6 +37,9 @@ router.route("/login").post(login);
 router.route("/refresh-token").post(refreshToken);
 router.route("/get-access-token").get(getAccessToken);
 router.route("/logout").post(logout);
+router.route("/activation/:token").get(activation);
+router.route("/activate-account/").post(activateAccount);
+router.route("/:id/send-activation-email").post(handlerActivateEmail);
 //----------------ADMIN-------------------------------
 router.route("/upload").post(login, upload.single("file"));
 // router.use("/users", auth, requireRole("ADMIN"), routesUsers);

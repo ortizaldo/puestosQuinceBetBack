@@ -1,10 +1,13 @@
 import { resError, db } from "modules";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import nodemailer from "nodemailer";
 import User from "schemas/Users";
 import AccessToken from "schemas/AccessToken";
+import TokenEmail from "schemas/TokenEmail";
 import _ from "underscore";
 import ObjectID from "bson-objectid";
+import crypto from "crypto";
 
 exports.login = async (req, res) => {
   const password = req.body.password;
@@ -178,6 +181,200 @@ exports.logout = async (req, res) => {
   }
 };
 
+// emailTokens
+exports.handlerActivateEmail = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // const user = await User.findById(id);
+    const user = await db.get(
+      req,
+      {
+        filters: {
+          _id: ObjectID(id),
+          deleted: false,
+        },
+        select: ["_id"],
+      },
+      User,
+    );
+
+    const userData = user.data;
+
+    if (!userData) {
+      return res.status(404).json({
+        message: "Usuario no encontrado",
+      });
+    }
+
+    if (userData.status === "ACTIVE") {
+      return res.status(400).json({
+        message: "El usuario ya se encuentra activo",
+      });
+    }
+
+    await db.updateMany(
+      req,
+      {
+        userId: userData._id,
+        usedAt: null,
+      },
+      TokenEmail,
+    );
+
+    // Token que viajará en la URL
+    const rawToken = crypto.randomBytes(32).toString("hex");
+
+    // Guardar solamente el hash en BD
+    const tokenHash = crypto
+      .createHash("sha256")
+      .update(rawToken)
+      .digest("hex");
+
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    await TokenEmail.create({
+      userId: userData._id,
+      tokenHash,
+      expiresAt,
+      usedAt: null,
+    });
+
+    const activationUrl = `${process.env.FRONTEND_URL}#/auth/activate-account?token=${rawToken}`;
+
+    await sendActivationEmail({
+      email: userData.email,
+      name: userData.firstName + " " + userData.lastName,
+      activationUrl,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Correo de activación enviado correctamente",
+    });
+  } catch (error) {
+    console.error(error);
+    resError(res, error);
+  }
+};
+
+exports.activation = async (req, res) => {
+  try {
+    const { token } = req.params;
+
+    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+
+    const activationToken = await TokenEmail.findOne({
+      tokenHash,
+      usedAt: null,
+      expiresAt: {
+        $gt: new Date(),
+      },
+    });
+
+    if (!activationToken) {
+      return res.status(400).json({
+        valid: false,
+        message: "El enlace de activación no es válido o ha expirado",
+      });
+    }
+
+    const user = await User.findById(activationToken.userId);
+
+    if (!user) {
+      return res.status(404).json({
+        valid: false,
+        message: "Usuario no encontrado",
+      });
+    }
+
+    if (user.status === "ACTIVE") {
+      return res.status(400).json({
+        valid: false,
+        message: "La cuenta ya se encuentra activa",
+      });
+    }
+
+    return res.status(200).json({
+      valid: true,
+      message: "Token válido",
+      user: {
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      },
+    });
+  } catch (error) {
+    console.error("Error validando token:", error);
+
+    return res.status(500).json({
+      valid: false,
+      message: "Error al validar el enlace de activación",
+    });
+  }
+};
+
+exports.activateAccount = async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(400).json({
+        message: "Token",
+      });
+    }
+
+    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+
+    const activationToken = await TokenEmail.findOne({
+      tokenHash,
+      usedAt: null,
+      expiresAt: {
+        $gt: new Date(),
+      },
+    });
+
+    if (!activationToken) {
+      return res.status(400).json({
+        message: "El enlace de activación no es válido o ha expirado",
+      });
+    }
+
+    const user = await User.findById(activationToken.userId);
+
+    if (!user) {
+      return res.status(404).json({
+        message: "Usuario no encontrado",
+      });
+    }
+
+    if (user.status === "ACTIVE") {
+      return res.status(400).json({
+        message: "La cuenta ya se encuentra activa",
+      });
+    }
+
+    user.status = "ACTIVE";
+    user.activatedAt = new Date();
+
+    await user.save();
+
+    activationToken.usedAt = new Date();
+
+    await activationToken.save();
+
+    return res.status(200).json({
+      message: "Cuenta activada correctamente",
+    });
+  } catch (error) {
+    console.error("Error activando cuenta:", error);
+
+    return res.status(500).json({
+      message: "Error al activar la cuenta",
+    });
+  }
+};
+
 function generateAccessToken(payload) {
   return jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, {
     expiresIn: "2h",
@@ -192,4 +389,47 @@ function generateRefreshToken(payload) {
   });
   refreshTokens.push(refreshToken);
   return refreshToken;
+}
+
+async function sendActivationEmail({ email, name, activationUrl }) {
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT),
+    secure: false,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASSWORD,
+    },
+  });
+
+  const mailOptions = {
+    from: `"Sociedad Gallistica La Angostura" <${process.env.SMTP_FROM}>`,
+    to: email,
+    subject: "Activación de cuenta",
+    html: `
+      <h2>Bienvenido, ${name}</h2>
+
+      <p>
+        Tu cuenta ha sido registrada.
+        Para completar tu registro debes crear tu contraseña.
+      </p>
+
+      <p>
+        <a href="${activationUrl}">
+          Activar cuenta
+        </a>
+      </p>
+
+      <p>
+        Este enlace tiene una vigencia de 24 horas.
+      </p>
+
+      <p>
+        Si no solicitaste esta cuenta, puedes ignorar este correo.
+      </p>
+    `,
+  };
+
+  const info = await transporter.sendMail(mailOptions);
+  return info;
 }
