@@ -184,22 +184,35 @@ exports.logout = async (req, res) => {
 // emailTokens
 exports.handlerActivateEmail = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id, token } = req.params;
 
-    // const user = await User.findById(id);
-    const user = await db.get(
-      req,
-      {
-        filters: {
-          _id: ObjectID(id),
-          deleted: false,
-        },
-        select: ["_id"],
-      },
-      User,
+    if (!id && !token) {
+      return res.status(400).json({
+        message: "Se requiere un ID de usuario o un token",
+      });
+    }
+
+    let tokenHashD = null;
+    if (!id && token) {
+      tokenHashD = crypto.createHash("sha256").update(token).digest("hex");
+    }
+
+    const oldToken = await TokenEmail.findOne({
+      tokenHash: tokenHashD,
+    });
+    console.log(
+      "%cpuestosQuinceBetBack/src/controllers/auth/login/index.js:203 oldToken",
+      "color: #007acc;",
+      oldToken,
     );
 
-    const userData = user.data;
+    const userId = oldToken ? oldToken.userId : id;
+    console.log("🚀 ~ userId:", userId);
+
+    // const user = await User.findById(id);
+    const user = await User.findById(userId);
+
+    const userData = user;
 
     if (!userData) {
       return res.status(404).json({
@@ -213,13 +226,14 @@ exports.handlerActivateEmail = async (req, res) => {
       });
     }
 
-    await db.updateMany(
-      req,
+    await TokenEmail.updateMany(
       {
-        userId: userData._id,
+        userId: user._id,
         usedAt: null,
       },
-      TokenEmail,
+      {
+        usedAt: new Date(),
+      },
     );
 
     // Token que viajará en la URL

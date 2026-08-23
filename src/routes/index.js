@@ -39,7 +39,8 @@ router.route("/get-access-token").get(getAccessToken);
 router.route("/logout").post(logout);
 router.route("/activation/:token").get(activation);
 router.route("/activate-account/").post(activateAccount);
-router.route("/:id/send-activation-email").post(handlerActivateEmail);
+router.route("/resend-activation-email/:token").post(handlerActivateEmail);
+router.route("/send-activation-email/:id").post(handlerActivateEmail);
 //----------------ADMIN-------------------------------
 router.route("/upload").post(login, upload.single("file"));
 // router.use("/users", auth, requireRole("ADMIN"), routesUsers);
