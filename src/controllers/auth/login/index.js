@@ -200,11 +200,6 @@ exports.handlerActivateEmail = async (req, res) => {
     const oldToken = await TokenEmail.findOne({
       tokenHash: tokenHashD,
     });
-    console.log(
-      "%cpuestosQuinceBetBack/src/controllers/auth/login/index.js:203 oldToken",
-      "color: #007acc;",
-      oldToken,
-    );
 
     const userId = oldToken ? oldToken.userId : id;
     console.log("🚀 ~ userId:", userId);
