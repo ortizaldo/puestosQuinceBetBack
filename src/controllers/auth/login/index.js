@@ -31,7 +31,11 @@ exports.login = async (req, res) => {
       return res
         .status(401)
         .json({ success: false, message: "Credenciales inválidas" });
-    if (user.disabled)
+    if (
+      user.status === "PENDING_ACTIVATION" ||
+      user.status === "INACTIVE" ||
+      user.status === "BLOCKED"
+    )
       return res
         .status(403)
         .json({ success: false, message: "Usuario deshabilitado" });
