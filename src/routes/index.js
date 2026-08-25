@@ -43,27 +43,22 @@ router.route("/resend-activation-email/:token").post(handlerActivateEmail);
 router.route("/send-activation-email/:id").post(handlerActivateEmail);
 //----------------ADMIN-------------------------------
 router.route("/upload").post(login, upload.single("file"));
-// router.use("/users", auth, requireRole("ADMIN"), routesUsers);
+// router.use("/users", auth, routesUsers);
 router.use("/users", routesUsers);
-router.use("/derby", auth, requireRole("ADMIN"), routesDerby);
-router.use("/compadres", auth, requireRole("ADMIN"), routesCompadres);
-router.use("/derby-conf", auth, requireRole("ADMIN"), routesDerbyConf);
-router.use("/rooster", auth, requireRole("ADMIN"), routesRoosters);
-router.use(
-  "/rooster-release",
-  auth,
-  requireRole("ADMIN"),
-  routesRoosterRelease,
-);
-router.use("/team", auth, requireRole("ADMIN"), routesTeam);
-router.use("/country", auth, requireRole("ADMIN"), routesCountry);
-router.use("/state", auth, requireRole("ADMIN"), routesState);
-router.use("/municipality", auth, requireRole("ADMIN"), routesMunicipality);
-router.use("/companies", auth, requireRole("ADMIN"), routesCompany);
-router.use("/bet-stubs", auth, requireRole("ADMIN"), routesBetStubs);
-router.use("/brooker", auth, requireRole("ADMIN"), routesBrooker);
+router.use("/derby", auth, routesDerby);
+router.use("/compadres", auth, routesCompadres);
+router.use("/derby-conf", auth, routesDerbyConf);
+router.use("/rooster", auth, routesRoosters);
+router.use("/rooster-release", auth, routesRoosterRelease);
+router.use("/team", auth, routesTeam);
+router.use("/country", auth, routesCountry);
+router.use("/state", auth, routesState);
+router.use("/municipality", auth, routesMunicipality);
+router.use("/companies", auth, routesCompany);
+router.use("/bet-stubs", auth, routesBetStubs);
+router.use("/brooker", auth, routesBrooker);
 router.use("/brooker-bet", auth, routesBrookerBet);
-router.use("/events", auth, requireRole("ADMIN"), routesEvents);
-router.use("/catalogs", auth, requireRole("ADMIN"), routesCatalogs);
+router.use("/events", auth, routesEvents);
+router.use("/catalogs", auth, routesCatalogs);
 
 export default router;

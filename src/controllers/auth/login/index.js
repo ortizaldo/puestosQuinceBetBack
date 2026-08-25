@@ -329,11 +329,17 @@ exports.activation = async (req, res) => {
 
 exports.activateAccount = async (req, res) => {
   try {
-    const { token } = req.body;
+    const { token, password } = req.body;
 
     if (!token) {
       return res.status(400).json({
-        message: "Token",
+        message: "Token es requerido",
+      });
+    }
+
+    if (!password) {
+      return res.status(400).json({
+        message: "Password es requerido",
       });
     }
 
@@ -368,6 +374,7 @@ exports.activateAccount = async (req, res) => {
     }
 
     user.status = "ACTIVE";
+    user.hashedPassword = await bcrypt.hash(password, 10);
     user.activatedAt = new Date();
 
     await user.save();

@@ -29,7 +29,6 @@ db.create = async (
 
   if (req.body.hashPassword) {
     params.hashedPassword = await bcrypt.hash(req.body.password, 10);
-    // console.log("🚀 ~ params.hashedPassword:", params.hashedPassword);
   }
 
   if (fields.length) {
