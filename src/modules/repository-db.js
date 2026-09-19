@@ -161,6 +161,7 @@ db.get = async (req, options, modelClass) => {
   };
 
   const pk = _.has(req.params, "id") ? req.params.id : null;
+  console.log("🚀 ~ pk:", pk);
 
   let filters = _.has(req.query, "filters")
     ? JSON.parse(req.query.filters)

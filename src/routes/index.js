@@ -13,6 +13,7 @@ import {
 } from "controllers/auth/login";
 
 import { uploadImage, upload as uploadFlyer } from "controllers/upload/images";
+import { getEventosKpis } from "controllers/customs/kpi-events";
 import routesUsers from "controllers/users";
 import routesDerby from "controllers/derby";
 import routesCompadres from "controllers/compadres";
@@ -64,6 +65,7 @@ router
   .route("/events/:id/flyer")
   .post(auth, uploadFlyer.single("flyer"), uploadImage);
 router.use("/events", auth, routesEvents);
+router.route("/event-kpis").get(auth, getEventosKpis);
 router.use("/catalogs", auth, routesCatalogs);
 
 export default router;

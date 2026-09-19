@@ -29,7 +29,6 @@ async function auth(req, res, next) {
     try {
       payload = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
     } catch (err) {
-      console.log("🚀 ~ auth ~ err:", err);
       const status = err.name === "TokenExpiredError" ? 401 : 403;
       return res.status(status).json({
         success: false,
@@ -44,7 +43,11 @@ async function auth(req, res, next) {
         .status(401)
         .json({ success: false, message: "Invalid token payload" });
     }
-
+    console.log(
+      "%cpuestosQuinceBetBack/src/middleware/auth.js:46 userId",
+      "color: #007acc;",
+      userId,
+    );
     // (Recomendado) Verifica que el usuario siga activo (evita que un token viejo funcione si lo deshabilitas)
     const { data } = await db.get({ params: { id: userId } }, null, User);
     const user = data;
