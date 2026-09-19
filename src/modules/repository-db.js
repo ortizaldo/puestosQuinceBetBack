@@ -148,7 +148,6 @@ db.updateMany = async (req, options, modelClass) => {
  * @return {Object} An object containing the retrieved data.
  */
 db.get = async (req, options, modelClass) => {
-  console.log("🚀 ~ modelClass:", modelClass);
   // Helper robusto: castea "142" -> 142 (Number) o -> ObjectId si no es numérico
   const castId = (v) => {
     if (v === null || v === undefined) return v;

@@ -1,15 +1,8 @@
+import { resError, db } from "modules";
 const express = require("express");
 const multer = require("multer");
 const { v2: cloudinary } = require("cloudinary");
 import Event from "schemas/Events";
-
-const router = express.Router();
-
-// cloudinary.config({
-//   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-//   api_key: process.env.CLOUDINARY_API_KEY,
-//   api_secret: process.env.CLOUDINARY_API_SECRET,
-// });
 
 exports.upload = multer({
   storage: multer.memoryStorage(),
@@ -53,7 +46,12 @@ exports.uploadImage = async (req, res) => {
   }
 
   try {
-    const event = await Event.findById(req.params.id);
+    req.query.filtersId = JSON.stringify({
+      _id: { value: req.params.id },
+    });
+
+    const data = await db.get(req, null, Event);
+    const event = data.data;
 
     if (!event) {
       return res.status(404).json({ message: "Evento no encontrado" });
@@ -62,13 +60,13 @@ exports.uploadImage = async (req, res) => {
     const result = await uploadToCloudinary(req.file.buffer);
     const previousPublicId = event.flyer?.publicId;
 
-    event.flyer = {
+    req.body.flyer = {
       url: result.secure_url,
       publicId: result.public_id,
     };
 
     try {
-      await event.save();
+      await db.edit(req, event, Event);
     } catch (error) {
       // Evita dejar una imagen nueva sin referencia si falla MongoDB.
       await cloudinary.uploader.destroy(result.public_id);
@@ -77,6 +75,11 @@ exports.uploadImage = async (req, res) => {
 
     // El flyer anterior se elimina solo después de guardar el nuevo.
     if (previousPublicId) {
+      console.log(
+        "%cpuestosQuinceBetBack/src/controllers/upload/images/index.js:81 previousPublicId",
+        "color: #007acc;",
+        previousPublicId,
+      );
       try {
         await cloudinary.uploader.destroy(previousPublicId);
       } catch (error) {
