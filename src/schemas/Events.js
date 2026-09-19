@@ -53,6 +53,7 @@ const schema = new mongoose.Schema(
 
     pesoMinimo: { type: Number, required: true },
     pesoMaximo: { type: Number, required: true },
+    tolerancia: { type: Number, required: true },
 
     flyer: {
       url: {

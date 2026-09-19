@@ -44,7 +44,6 @@ db.create = async (
   }
 
   const authHeader = req.headers["authorization"];
-  console.log("🚀 ~ authHeader:", authHeader);
   let payload = null;
   if (!_.isUndefined(authHeader) && !_.isNull(authHeader)) {
     payload = getPayloadFromToken(req);
@@ -284,9 +283,8 @@ db.get = async (req, options, modelClass) => {
 
 db.edit = async (req, options, modelClass) => {
   const authHeader = req.headers["authorization"];
-  console.log("🚀 ~ authHeader:", authHeader);
   let payload = null;
-  if (!authHeader) {
+  if (authHeader) {
     payload = getPayloadFromToken(req);
   }
   const { body } = req;
@@ -325,9 +323,8 @@ db.edit = async (req, options, modelClass) => {
 
 db.delete = async (req, options, modelClass) => {
   const authHeader = req.headers["authorization"];
-  console.log("🚀 ~ authHeader:", authHeader);
   let payload = null;
-  if (!authHeader) {
+  if (authHeader) {
     payload = getPayloadFromToken(req);
   }
   const { id: pk } = req.params;
@@ -441,7 +438,6 @@ function getPayloadFromToken(req) {
     const payload = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
     return payload;
   } catch (err) {
-    console.log("🚀 ~ getPayloadFromToken ~ err:", err);
     throw new Error(
       err.name === "TokenExpiredError" ? "Token expired" : "Token invalid",
     );
