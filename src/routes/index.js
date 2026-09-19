@@ -11,6 +11,8 @@ import {
   activateAccount,
   getAccessToken,
 } from "controllers/auth/login";
+
+import { uploadImage, upload as uploadFlyer } from "controllers/upload/images";
 import routesUsers from "controllers/users";
 import routesDerby from "controllers/derby";
 import routesCompadres from "controllers/compadres";
@@ -58,6 +60,9 @@ router.use("/companies", auth, routesCompany);
 router.use("/bet-stubs", auth, routesBetStubs);
 router.use("/brooker", auth, routesBrooker);
 router.use("/brooker-bet", auth, routesBrookerBet);
+router
+  .route("/events/:id/flyer")
+  .post(auth, uploadFlyer.single("flyer"), uploadImage);
 router.use("/events", auth, routesEvents);
 router.use("/catalogs", auth, routesCatalogs);
 
