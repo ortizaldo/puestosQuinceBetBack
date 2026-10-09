@@ -7,7 +7,7 @@ const schema = new mongoose.Schema(
   {
     event: {
       type: Schema.Types.ObjectId,
-      ref: "events",
+      ref: "eventos",
       required: true,
     },
     numero: {

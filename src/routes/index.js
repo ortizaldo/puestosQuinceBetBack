@@ -52,7 +52,7 @@ router.use("/users", routesUsers);
 router.use("/derby", auth, routesDerby);
 router.use("/compadres", auth, routesCompadres);
 router.use("/derby-conf", auth, routesDerbyConf);
-router.use("/rooster", auth, routesRoosters);
+router.use("/rooster", routesRoosters);
 router.use("/rooster-release", auth, routesRoosterRelease);
 router.use("/team", auth, routesTeam);
 router.use("/country", auth, routesCountry);
