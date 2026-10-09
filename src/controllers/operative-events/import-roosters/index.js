@@ -22,7 +22,6 @@ const upload = multer({
 router.post(
   "/:eventoId/participantes/importar",
   (req, res, next) => {
-    console.log("🚀 ~ req:", req);
     upload.single("archivo")(req, res, (error) => {
       if (error) {
         return res.status(error.code === "LIMIT_FILE_SIZE" ? 413 : 400).json({

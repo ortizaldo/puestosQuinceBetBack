@@ -97,21 +97,3 @@ export async function extraerParticipantes(buffer) {
     await tarea.destroy();
   }
 }
-
-// exports.importRoosters = async (req, res) => {
-//   if (!req.file) {
-//     return res.status(400).json({ message: "Selecciona un archivo PDF." });
-//   }
-
-//   try {
-//     const participantes = await exports.extraerParticipantes(req.file.buffer);
-//     return res.json({ participantes });
-//   } catch (error) {
-//     return res.status(error.status || 500).json({
-//       message:
-//         error.status === 422
-//           ? error.message
-//           : "No se pudo importar el reporte.",
-//     });
-//   }
-// };
