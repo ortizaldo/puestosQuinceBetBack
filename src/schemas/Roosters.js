@@ -5,17 +5,32 @@ import { autoIncrement } from "mongoose-plugin-autoinc";
 
 const schema = new mongoose.Schema(
   {
-    derby: {
+    event: {
       type: Schema.Types.ObjectId,
-      ref: "derby",
+      ref: "events",
       required: true,
     },
-    teams: {},
+    numero: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
+    nombre: {
+      type: String,
+      required: true,
+      trim: true,
+    },
   },
-  { toObject: { virtuals: true }, toJSON: { virtuals: true }, timestamps: true }
+  {
+    toObject: { virtuals: true },
+    toJSON: { virtuals: true },
+    timestamps: true,
+  },
 );
 
 schema.add(AdminFields);
+
+schema.index({ event: 1, numero: 1 }, { unique: true });
 
 schema.plugin(autoIncrement, "roosters");
 

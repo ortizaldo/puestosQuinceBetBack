@@ -13,6 +13,7 @@ import {
 } from "controllers/auth/login";
 
 import { uploadImage, upload as uploadFlyer } from "controllers/upload/images";
+import routesImportRoosters from "controllers/operative-events/import-roosters";
 import { getEventosKpis } from "controllers/customs/kpi-events";
 import routesUsers from "controllers/users";
 import routesDerby from "controllers/derby";
@@ -64,6 +65,8 @@ router.use("/brooker-bet", auth, routesBrookerBet);
 router
   .route("/events/:id/flyer")
   .post(auth, uploadFlyer.single("flyer"), uploadImage);
+// router.use("/:eventoId/participantes/importar", auth);
+router.use(routesImportRoosters);
 router.use("/events", auth, routesEvents);
 router.route("/event-kpis").get(auth, getEventosKpis);
 router.use("/catalogs", auth, routesCatalogs);
