@@ -37,7 +37,8 @@ export default {
     segmentDeleteNotFound: {
       data: {
         title: "Segment not found",
-        message: "The segment you are trying to delete does not exist or you do not have permission to delete it",
+        message:
+          "The segment you are trying to delete does not exist or you do not have permission to delete it",
         code: 5001,
       },
       httpCode: 403,
@@ -45,7 +46,8 @@ export default {
     segmentGetNotFound: {
       data: {
         title: "Segment not found",
-        message: "The segment you are trying to retrieve does not exist or does not have permission to view it",
+        message:
+          "The segment you are trying to retrieve does not exist or does not have permission to view it",
         code: 5002,
       },
       httpCode: 403,
@@ -53,7 +55,8 @@ export default {
     segmentUpdateNotFound: {
       data: {
         title: "Segment not found",
-        message: "The segment you are trying to update does not exist or does not have permission to view it",
+        message:
+          "The segment you are trying to update does not exist or does not have permission to view it",
         code: 5003,
       },
       httpCode: 403,
@@ -62,7 +65,8 @@ export default {
     moduleHasNotColumns: {
       data: {
         title: "Columns not found",
-        message: "The module you are trying to access does not have configured columns",
+        message:
+          "The module you are trying to access does not have configured columns",
         code: 5100,
       },
       httpCode: 403,
@@ -79,7 +83,8 @@ export default {
     profileUpdateNotFound: {
       data: {
         title: "Profile not found",
-        message: "The profile you are trying to update does not exist or does not have permission to view it",
+        message:
+          "The profile you are trying to update does not exist or does not have permission to view it",
         code: 5201,
       },
       httpCode: 403,
@@ -87,7 +92,8 @@ export default {
     profileDeleteNotFound: {
       data: {
         title: "Profile not found",
-        message: "The profile you are trying to delete does not exist or you do not have permission to delete it",
+        message:
+          "The profile you are trying to delete does not exist or you do not have permission to delete it",
         code: 5002,
       },
       httpCode: 403,
@@ -95,7 +101,8 @@ export default {
     profileGetNotFound: {
       data: {
         title: "Profile not found",
-        message: "The profile you are trying to retrieve does not exist or does not have permission to view it",
+        message:
+          "The profile you are trying to retrieve does not exist or does not have permission to view it",
         code: 5003,
       },
       httpCode: 403,
@@ -103,7 +110,8 @@ export default {
     profileDeleteInUse: {
       data: {
         title: "Profile in use",
-        message: "The profile you are trying to delete is assigned to one or more users",
+        message:
+          "The profile you are trying to delete is assigned to one or more users",
         code: 5004,
       },
       httpCode: 401,
@@ -120,7 +128,8 @@ export default {
     userSecurityUpdateNotFound: {
       data: {
         title: "Segurity not found",
-        message: "The segurity you are trying to update does not exist or does not have permission to view it",
+        message:
+          "The segurity you are trying to update does not exist or does not have permission to view it",
         code: 5301,
       },
       httpCode: 403,
@@ -128,7 +137,8 @@ export default {
     userSecurityDeleteNotFound: {
       data: {
         title: "Security not found",
-        message: "The security you are trying to delete does not exist or you do not have permission to delete it",
+        message:
+          "The security you are trying to delete does not exist or you do not have permission to delete it",
         code: 5302,
       },
       httpCode: 403,
@@ -136,7 +146,8 @@ export default {
     userSecurityGetNotFound: {
       data: {
         title: "Security not found",
-        message: "The security you are trying to retrieve does not exist or does not have permission to view it",
+        message:
+          "The security you are trying to retrieve does not exist or does not have permission to view it",
         code: 5303,
       },
       httpCode: 403,
@@ -152,7 +163,8 @@ export default {
     userSecurityDeleteInUse: {
       data: {
         title: "Security profile in use",
-        message: "The security profile you are trying to delete is assigned to one or more users",
+        message:
+          "The security profile you are trying to delete is assigned to one or more users",
         code: 5305,
       },
       httpCode: 401,
@@ -199,8 +211,8 @@ export default {
     },
     recordDuplicated: {
       data: {
-        title: "Catalogs",
-        message: "Catalog in use",
+        title: "Registro duplicado",
+        message: "El registro que intenta registrar ya existe",
         code: 5311,
       },
       httpCode: 421,
@@ -208,7 +220,8 @@ export default {
     countryDeleteInUse: {
       data: {
         title: "Country in use",
-        message: "The country you are trying to delete is assigned to one or more records",
+        message:
+          "The country you are trying to delete is assigned to one or more records",
         code: 5312,
       },
       httpCode: 422,
@@ -216,7 +229,8 @@ export default {
     estateDeleteInUse: {
       data: {
         title: "Country in use",
-        message: "The state you are trying to delete is assigned to one or more records",
+        message:
+          "The state you are trying to delete is assigned to one or more records",
         code: 5313,
       },
       httpCode: 423,
@@ -288,7 +302,8 @@ export default {
     recordAdvancePaymentUsed: {
       data: {
         title: "Advance payments",
-        message: "The advance that you want to register is already in the system.",
+        message:
+          "The advance that you want to register is already in the system.",
         code: 5319,
       },
       httpCode: 431,
