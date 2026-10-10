@@ -30,9 +30,9 @@ const schema = new mongoose.Schema(
 
 schema.add(AdminFields);
 
-schema.index({ event: 1, numero: 1 }, { unique: true });
+schema.index({ nombre: 1 }, { unique: true });
 
-schema.plugin(autoIncrement, "roosters");
+schema.plugin(autoIncrement, { model: "roosters", field: "numero" });
 
 const roosters = mongoose.model("roosters", schema);
 export default roosters;
