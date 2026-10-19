@@ -15,6 +15,7 @@ import {
 import { uploadImage, upload as uploadFlyer } from "controllers/upload/images";
 import routesImportRoosters from "controllers/operative-events/import-roosters";
 import { getEventosKpis } from "controllers/customs/kpi-events";
+import { getRoostersKpis } from "controllers/customs/kpi-operative-events";
 import routesUsers from "controllers/users";
 import routesDerby from "controllers/derby";
 import routesCompadres from "controllers/compadres";
@@ -47,7 +48,6 @@ router.route("/resend-activation-email/:token").post(handlerActivateEmail);
 router.route("/send-activation-email/:id").post(handlerActivateEmail);
 //----------------ADMIN-------------------------------
 router.route("/upload").post(login, upload.single("file"));
-// router.use("/users", auth, routesUsers);
 router.use("/users", routesUsers);
 router.use("/derby", auth, routesDerby);
 router.use("/compadres", auth, routesCompadres);
@@ -65,10 +65,10 @@ router.use("/brooker-bet", auth, routesBrookerBet);
 router
   .route("/events/:id/flyer")
   .post(auth, uploadFlyer.single("flyer"), uploadImage);
-// router.use("/:eventoId/participantes/importar", auth);
 router.use(routesImportRoosters);
 router.use("/events", auth, routesEvents);
 router.route("/event-kpis").get(auth, getEventosKpis);
+router.route("/event-kpi-roosters/:id").get(getRoostersKpis);
 router.use("/catalogs", auth, routesCatalogs);
 
 export default router;

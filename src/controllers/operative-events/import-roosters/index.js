@@ -84,49 +84,57 @@ router.post(
           nombrePdf: item.nombre,
         }));
 
+      const nombresVistos = new Set();
+      const nombresDuplicadosPdf = new Set();
+      for (const item of participantes) {
+        if (nombresVistos.has(item.nombre)) nombresDuplicadosPdf.add(item.nombre);
+        nombresVistos.add(item.nombre);
+      }
+      const nombresEnOtroEvento = await Roosters.find({
+        event: { $ne: eventoId },
+        nombre: { $in: participantes.map((item) => item.nombre) },
+      })
+        .distinct("nombre");
+
       if (req.query.preview === "true") {
         return res.json({
           totalDetectados: participantes.length,
           nuevos: nuevos.length,
           existentes: existentes.length,
           conflictos,
+          nombresDuplicadosPdf: [...nombresDuplicadosPdf],
+          nombresEnOtroEvento,
           participantes,
         });
       }
 
-      // $setOnInsert mantiene los registros existentes.
-      // El índice único también protege ante peticiones concurrentes.
-      let importados = 0;
-
-      if (nuevos.length) {
-        const resultado = await Roosters.bulkWrite(
-          nuevos.map((item) => ({
-            updateOne: {
-              filter: {
-                event: eventoId,
-                numero: item.numero,
-              },
-              update: {
-                $setOnInsert: {
-                  event: eventoId,
-                  numero: item.numero,
-                  nombre: item.nombre,
-                },
-              },
-              upsert: true,
-            },
-          })),
-          { ordered: true },
-        );
-
-        importados = resultado.upsertedCount;
+      if (nombresDuplicadosPdf.size || nombresEnOtroEvento.length) {
+        return res.status(409).json({
+          message:
+            "No se puede reemplazar la lista porque hay nombres duplicados.",
+          nombresDuplicadosPdf: [...nombresDuplicadosPdf],
+          nombresEnOtroEvento,
+        });
       }
+
+      // La importación reemplaza la lista completa del evento con lo leído del PDF.
+      const eliminados = await Roosters.deleteMany({ event: eventoId });
+      const registros = participantes.map((item) => ({
+        event: eventoId,
+        numero: item.numero,
+        nombre: item.nombre,
+      }));
+      const insertados = registros.length
+        ? await Roosters.insertMany(registros, { ordered: true })
+        : [];
+      const importados = insertados.length;
 
       return res.status(importados ? 201 : 200).json({
         message: "Importación completada.",
         totalDetectados: participantes.length,
+        eliminados: eliminados.deletedCount,
         importados,
-        omitidos: participantes.length - importados,
+        omitidos: 0,
         conflictos,
       });
     } catch (error) {
@@ -134,8 +142,6 @@ router.post(
         return res.status(422).json({ message: error.message });
       }
 
-      // Una escritura puede haberse completado parcialmente.
-      // Reintentar es seguro por el índice y $setOnInsert.
       next(error);
     }
   },

@@ -549,21 +549,9 @@ function iteratorLookup(req, modelClass, array) {
           },
         });
       }
-      // if (referencePath.instance === "ObjectId") {
-      //   result.push({
-      //     $unwind: {
-      //       path: `$${a.path}`,
-      //       preserveNullAndEmptyArrays: true,
-      //     },
-      //   });
-      // }
     }
   });
   return result;
-}
-
-function isNumber(value) {
-  return Number.isInteger(Number(value));
 }
 
 export default db;

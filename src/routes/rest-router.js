@@ -1,7 +1,5 @@
 import { Router } from "express";
 import { resError, db } from "modules";
-import crypto from "crypto";
-import bcrypt from "bcrypt";
 import _ from "underscore";
 
 function RestRouter(modelClassname, options = null, hashPassword = false) {
@@ -9,6 +7,15 @@ function RestRouter(modelClassname, options = null, hashPassword = false) {
   async function handlerGet(req, res) {
     try {
       const response = await db.get(req, options, modelClassname);
+
+      if (
+        req.params.id &&
+        response.data &&
+        typeof options?.afterGetById === "function"
+      ) {
+        const extraFields = await options.afterGetById(response.data, req);
+        if (extraFields) Object.assign(response.data, extraFields);
+      }
 
       res.status(200).json(response);
     } catch (err) {
