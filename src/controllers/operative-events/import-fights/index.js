@@ -14,11 +14,16 @@ import {
 
 const router = Router();
 
+function idDe(valor) {
+  if (valor == null) return null;
+  return String(valor._id ?? valor);
+}
+
 function firma(pelea) {
   return JSON.stringify({
     ronda: pelea.ronda,
-    verde: String(pelea.verde),
-    rojo: String(pelea.rojo),
+    verde: idDe(pelea.verde),
+    rojo: idDe(pelea.rojo),
     diferenciaGramos: pelea.diferenciaGramos,
   });
 }
@@ -35,7 +40,7 @@ const upload = multer({
 
 // y autorización para administrar el evento.
 router.post(
-  "/:eventoId/fights/import",
+  "/eventos/:eventoId/fights/import",
   (req, res, next) => {
     upload.single("archivo")(req, res, (error) => {
       if (error) {
@@ -62,32 +67,25 @@ router.post(
         throw errorPdf("Falta el archivo PDF en la clave archivo.", 400);
       if (!(await Event.exists({ _id: eventoId })))
         throw errorPdf("El evento no existe.", 404);
+
       const filas = await extraerPeleas(req.file.buffer);
-      console.log("🚀 ~ filas:", filas);
 
       async function preparar(session) {
-        const numeros = [
-          ...new Set(
-            filas.flatMap((fila) => [
-              fila.verde.numeroPdf,
-              fila.rojo.numeroPdf,
-            ]),
-          ),
-        ];
-
-        const participantes = await Roosters.find({
-          event: eventoId,
-          numero: { $in: numeros },
-        })
+        // 1) Trae TODOS los participantes del evento (suelen ser decenas/cientos)
+        const participantes = await Roosters.find({ event: eventoId })
           .select("_id numero nombre")
           .session(session)
           .lean();
-        const porNumero = new Map();
-        for (const participante of participantes) {
-          const lista = porNumero.get(participante.numero) || [];
-          lista.push(participante);
-          porNumero.set(participante.numero, lista);
+
+        // 2) Indexa por nombre normalizado (lowercase, sin tildes, trim…)
+        const porNombre = new Map();
+        for (const p of participantes) {
+          const clave = normalizarNombre(p.nombre);
+          const lista = porNombre.get(clave) || [];
+          lista.push(p);
+          porNombre.set(clave, lista);
         }
+
         const problemas = [];
         const documentos = filas.map((fila) => {
           const doc = {
@@ -96,74 +94,99 @@ router.post(
             ronda: fila.ronda,
             diferenciaGramos: fila.diferenciaGramos,
           };
+
           for (const lado of ["verde", "rojo"]) {
-            const coincidencias = porNumero.get(fila[lado].numeroPdf) || [];
-            if (coincidencias.length !== 1)
+            const clave = normalizarNombre(fila[lado].nombre);
+            const coincidencias = porNombre.get(clave) || [];
+
+            if (coincidencias.length !== 1) {
               problemas.push({
                 cotejo: fila.cotejo,
                 lado,
                 numero: fila[lado].numeroPdf,
                 nombre: fila[lado].nombre,
                 motivo: coincidencias.length
-                  ? "Número de participante ambiguo en el evento."
+                  ? "Nombre de participante ambiguo en el evento."
                   : "Participante no registrado en el evento.",
               });
-            else if (
-              normalizarNombre(coincidencias[0].nombre) !==
-              normalizarNombre(fila[lado].nombre)
+              continue;
+            }
+
+            const participante = coincidencias[0];
+
+            // 3) Validar que el número del PDF corresponda al mismo gallo
+            if (
+              fila[lado].numeroPdf != null &&
+              String(participante.numero) !== String(fila[lado].numeroPdf)
             ) {
               problemas.push({
                 cotejo: fila.cotejo,
                 lado,
-                numero: fila[lado].numeroPdf,
+                numeroPdf: fila[lado].numeroPdf,
                 nombrePdf: fila[lado].nombre,
-                nombreRegistrado: coincidencias[0].nombre,
-                motivo: "El número pertenece a otro participante.",
+                nombreRegistrado: participante.nombre,
+                numeroRegistrado: participante.numero,
+                motivo:
+                  "El número del PDF no coincide con el registrado para ese nombre.",
               });
+              continue;
             }
-            doc[lado] = coincidencias[0]?._id;
+
+            doc[lado] = {
+              _id: participante._id,
+              peso: fila[lado].peso ?? 0,
+              anillo: fila[lado].anillo ?? 0,
+            };
           }
+
           if (
             doc.verde != null &&
             doc.rojo != null &&
-            String(doc.verde) === String(doc.rojo)
+            idDe(doc.verde) === idDe(doc.rojo)
           ) {
             problemas.push({
               cotejo: fila.cotejo,
               motivo: "Los dos lados corresponden al mismo participante.",
             });
           }
+
           return doc;
         });
+
         if (problemas.length)
           throw errorPdf(
             "Corrige los participantes antes de importar.",
             409,
             problemas,
           );
+
         const guardadas = await RoosterFights.find({ event: eventoId })
           .session(session)
           .lean();
         const porCotejo = new Map(guardadas.map((p) => [p.cotejo, p]));
-        const nuevas = [],
-          conflictos = [];
+
+        const nuevas = [];
+        const conflictos = [];
         for (const doc of documentos) {
           const anterior = porCotejo.get(doc.cotejo);
           if (!anterior) nuevas.push(doc);
           else if (firma(anterior) !== firma(doc)) conflictos.push(doc.cotejo);
         }
+
         if (conflictos.length)
           throw errorPdf(
             "Hay cotejos existentes con datos diferentes. No se sobrescribieron.",
             409,
             conflictos,
           );
+
         const resumenRondas = Object.fromEntries(
           [...new Set(filas.map((p) => p.ronda))].map((r) => [
             r,
             filas.filter((p) => p.ronda === r).length,
           ]),
         );
+
         return {
           nuevas,
           documentos,
@@ -176,30 +199,18 @@ router.post(
         };
       }
 
-      if (req.query.preview === "true") {
-        const plan = await preparar(null);
-        return res.json({
-          preview: true,
-          ...plan.resumen,
-          peleas: plan.documentos,
-        });
+      const plan = await preparar(null);
+
+      if (plan.nuevas.length) {
+        await RoosterFights.insertMany(plan.nuevas, { ordered: true });
       }
-      // Una sola transacción: si una escritura falla, no queda un lote parcial.
-      // Requiere Atlas o MongoDB replica set; modelos en la misma conexión.
-      const resumen = await Event.db.transaction(async (session) => {
-        if (!(await Event.exists({ _id: eventoId }).session(session)))
-          throw errorPdf("El evento no existe.", 404);
-        const plan = await preparar(session);
-        if (plan.nuevas.length)
-          // await RoosterFights.insertMany(plan.nuevas, {
-          //   session,
-          //   ordered: true,
-          // });
-          return { ...plan.resumen, importadas: plan.nuevas.length };
+
+      const resumen = { ...plan.resumen, importadas: plan.nuevas.length };
+      return res.status(200).json({
+        message: "Importación completada.",
+        resumen,
+        importadas: resumen.importadas || 0,
       });
-      return res
-        .status(resumen.importadas ? 201 : 200)
-        .json({ message: "Importación completada.", ...resumen });
     } catch (error) {
       if (error.status)
         return res

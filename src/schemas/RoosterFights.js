@@ -12,8 +12,24 @@ const schema = new mongoose.Schema(
     },
     cotejo: { type: Number, required: true, min: 1 },
     ronda: { type: Number, required: true, min: 1 },
-    verde: { type: Schema.Types.ObjectId, ref: "roosters", required: true },
-    rojo: { type: Schema.Types.ObjectId, ref: "roosters", required: true },
+    verde: {
+      _id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "roosters",
+        required: true,
+      },
+      peso: { type: Number, default: 0, min: 0 },
+      anillo: { type: Number, default: 0, min: 0 },
+    },
+    rojo: {
+      _id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "roosters",
+        required: true,
+      },
+      peso: { type: Number, default: 0, min: 0 },
+      anillo: { type: Number, default: 0, min: 0 },
+    },
     diferenciaGramos: { type: Number, required: true, min: 0 },
     estado: {
       type: String,

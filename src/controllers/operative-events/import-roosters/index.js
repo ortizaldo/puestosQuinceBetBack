@@ -20,7 +20,7 @@ const upload = multer({
 
 // y autorización para administrar el evento.
 router.post(
-  "/eventos/:eventoId/peleas/importar",
+  "/:eventoId/participantes/importar",
   (req, res, next) => {
     upload.single("archivo")(req, res, (error) => {
       if (error) {
@@ -117,16 +117,9 @@ router.post(
         });
       }
 
-      if (conflictos.length) {
-        return res.status(409).json({
-          message:
-            "Hay números registrados con otro nombre. Corrige el PDF o los datos existentes.",
-          conflictos,
-        });
-      }
-
-      // Conserva los IDs existentes porque las peleas los referencian.
-      const registros = nuevos.map((item) => ({
+      // La importación reemplaza la lista completa del evento con lo leído del PDF.
+      const eliminados = await Roosters.deleteMany({ event: eventoId });
+      const registros = participantes.map((item) => ({
         event: eventoId,
         numero: item.numero,
         nombre: item.nombre,
@@ -139,8 +132,9 @@ router.post(
       return res.status(importados ? 201 : 200).json({
         message: "Importación completada.",
         totalDetectados: participantes.length,
+        eliminados: eliminados.deletedCount,
         importados,
-        existentes: existentes.length,
+        omitidos: 0,
         conflictos,
       });
     } catch (error) {
