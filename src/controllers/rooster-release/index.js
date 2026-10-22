@@ -1,4 +1,4 @@
-import RoosterRelease from "schemas/RoosterRelease";
+import RoosterRelease from "schemas/RoosterFights";
 import RestRouter from "routes/rest-router";
 
 const router = RestRouter(RoosterRelease);

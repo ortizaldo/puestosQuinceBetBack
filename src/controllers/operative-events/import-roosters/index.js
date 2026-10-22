@@ -20,7 +20,7 @@ const upload = multer({
 
 // y autorización para administrar el evento.
 router.post(
-  "/:eventoId/participantes/importar",
+  "/eventos/:eventoId/peleas/importar",
   (req, res, next) => {
     upload.single("archivo")(req, res, (error) => {
       if (error) {
@@ -87,14 +87,14 @@ router.post(
       const nombresVistos = new Set();
       const nombresDuplicadosPdf = new Set();
       for (const item of participantes) {
-        if (nombresVistos.has(item.nombre)) nombresDuplicadosPdf.add(item.nombre);
+        if (nombresVistos.has(item.nombre))
+          nombresDuplicadosPdf.add(item.nombre);
         nombresVistos.add(item.nombre);
       }
       const nombresEnOtroEvento = await Roosters.find({
         event: { $ne: eventoId },
         nombre: { $in: participantes.map((item) => item.nombre) },
-      })
-        .distinct("nombre");
+      }).distinct("nombre");
 
       if (req.query.preview === "true") {
         return res.json({
@@ -117,9 +117,16 @@ router.post(
         });
       }
 
-      // La importación reemplaza la lista completa del evento con lo leído del PDF.
-      const eliminados = await Roosters.deleteMany({ event: eventoId });
-      const registros = participantes.map((item) => ({
+      if (conflictos.length) {
+        return res.status(409).json({
+          message:
+            "Hay números registrados con otro nombre. Corrige el PDF o los datos existentes.",
+          conflictos,
+        });
+      }
+
+      // Conserva los IDs existentes porque las peleas los referencian.
+      const registros = nuevos.map((item) => ({
         event: eventoId,
         numero: item.numero,
         nombre: item.nombre,
@@ -132,9 +139,8 @@ router.post(
       return res.status(importados ? 201 : 200).json({
         message: "Importación completada.",
         totalDetectados: participantes.length,
-        eliminados: eliminados.deletedCount,
         importados,
-        omitidos: 0,
+        existentes: existentes.length,
         conflictos,
       });
     } catch (error) {

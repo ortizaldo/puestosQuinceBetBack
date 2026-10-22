@@ -14,6 +14,7 @@ import {
 
 import { uploadImage, upload as uploadFlyer } from "controllers/upload/images";
 import routesImportRoosters from "controllers/operative-events/import-roosters";
+import routesImportFights from "controllers/operative-events/import-fights";
 import { getEventosKpis } from "controllers/customs/kpi-events";
 import { getRoostersKpis } from "controllers/customs/kpi-operative-events";
 import routesUsers from "controllers/users";
@@ -66,6 +67,7 @@ router
   .route("/events/:id/flyer")
   .post(auth, uploadFlyer.single("flyer"), uploadImage);
 router.use(routesImportRoosters);
+router.use(routesImportFights);
 router.use("/events", auth, routesEvents);
 router.route("/event-kpis").get(auth, getEventosKpis);
 router.route("/event-kpi-roosters/:id").get(getRoostersKpis);
