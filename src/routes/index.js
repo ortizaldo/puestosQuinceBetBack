@@ -22,7 +22,7 @@ import routesDerby from "controllers/derby";
 import routesCompadres from "controllers/compadres";
 import routesDerbyConf from "controllers/derby-conf";
 import routesRoosters from "controllers/roosters";
-import routesRoosterRelease from "controllers/rooster-release";
+import routesRoosterRelease from "controllers/rooster-fights";
 import routesTeam from "controllers/team";
 import routesCountry from "controllers/country";
 import routesState from "controllers/state";
@@ -32,6 +32,7 @@ import routesBetStubs from "controllers/bet-stubs";
 import routesBrooker from "controllers/brooker";
 import routesBrookerBet from "controllers/brooker-bet";
 import routesEvents from "controllers/events";
+import routesRoosterFights from "controllers/rooster-fights";
 import routesCatalogs from "controllers/catalog";
 
 const router = Router();
@@ -69,6 +70,7 @@ router
 router.use(routesImportRoosters);
 router.use(routesImportFights);
 router.use("/events", auth, routesEvents);
+router.use("/rooster-fights", auth, routesRoosterFights);
 router.route("/event-kpis").get(auth, getEventosKpis);
 router.route("/event-kpi-roosters/:id").get(getRoostersKpis);
 router.use("/catalogs", auth, routesCatalogs);
