@@ -7,19 +7,23 @@ const schema = new mongoose.Schema(
   {
     derby: {
       type: Schema.Types.ObjectId,
-      ref: "derbies",
+      ref: "derby",
       required: true,
     },
     brooker: {
       type: Schema.Types.ObjectId,
-      ref: "brookers",
+      ref: "brooker",
       required: true,
     },
     folio: { type: Number, required: true },
     amount: { type: Number, required: true },
     nulo: { type: Boolean, required: false, default: false },
   },
-  { toObject: { virtuals: true }, toJSON: { virtuals: true }, timestamps: true }
+  {
+    toObject: { virtuals: true },
+    toJSON: { virtuals: true },
+    timestamps: true,
+  },
 );
 
 schema.add(AdminFields);
