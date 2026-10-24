@@ -17,6 +17,11 @@ function RestRouter(modelClassname, options = null, hashPassword = false) {
         if (extraFields) Object.assign(response.data, extraFields);
       }
 
+      if (response.data && typeof options?.afterGetAll === "function") {
+        const extraFields = await options.afterGetAll(response.data, req);
+        if (extraFields) Object.assign(response.data, extraFields);
+      }
+
       // if (response.data && typeof options?.afterGet === "function") {
       //   const extraFields = await options.afterGet(response.data, req);
       //   if (extraFields) Object.assign(response.data, extraFields);

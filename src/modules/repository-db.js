@@ -189,11 +189,6 @@ db.get = async (req, options, modelClass) => {
   });
 
   filters = { ...filters, ...filtersId };
-  console.log(
-    "%cpuestosQuinceBetBack/src/modules/repository-db.js:192 filters",
-    "color: #007acc;",
-    filters,
-  );
   if (_.has(req.query, "regexp")) {
     const regexp = JSON.parse(req.query.regexp);
     filters = { ...filters, ...regexp };
@@ -248,7 +243,6 @@ db.get = async (req, options, modelClass) => {
   }
 
   pipelines = [{ $match: filters }, ...pipelines];
-  console.log("🚀 ~ pipelines:", pipelines);
 
   let result;
 

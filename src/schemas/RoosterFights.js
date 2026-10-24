@@ -59,5 +59,5 @@ schema.add(AdminFields);
 
 schema.index({ event: 1, cotejo: 1 }, { unique: true });
 
-const User = mongoose.model("roosterfights", schema);
-export default User;
+const RoosterFights = mongoose.model("roosterfights", schema);
+export default RoosterFights;
