@@ -7,7 +7,7 @@ const schema = new mongoose.Schema(
   {
     derby: {
       type: Schema.Types.ObjectId,
-      ref: "derby",
+      ref: "eventos",
       required: true,
     },
     brooker: {
