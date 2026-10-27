@@ -168,7 +168,6 @@ db.get = async (req, options, modelClass) => {
 
   const nin = _.has(req.query, "nin") ? JSON.parse(req.query.nin) : {};
 
-  // ✅ nin._id.$nin puede traer numbers u objectIds en string
   if (
     _.has(nin, "_id") &&
     _.has(nin._id, "$nin") &&
@@ -182,7 +181,6 @@ db.get = async (req, options, modelClass) => {
     ? JSON.parse(req.query.filtersId)
     : {};
 
-  // ✅ filtersId: convierte cada value a Number u ObjectId
   Object.keys(filtersId).forEach((key) => {
     const id = filtersId[key]?.value;
     if (id !== undefined) filtersId[key] = castId(id);
