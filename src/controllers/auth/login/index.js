@@ -72,59 +72,43 @@ exports.login = async (req, res) => {
 
 exports.refreshToken = async (req, res) => {
   try {
-    if (!req.body.token) throw Error("Empty token");
+    const rawRefreshToken =
+      req.body.refresh_token || req.body.refreshToken || req.body.token;
+    if (!rawRefreshToken) {
+      return res.status(400).json({ message: "Refresh token requerido", success: false });
+    }
 
-    req.query.filters = JSON.stringify({
-      refreshToken: req.body.token,
+    // Comprueba firma, expiración y que el token siga activo en la base de datos.
+    const payload = jwt.verify(rawRefreshToken, process.env.REFRESH_TOKEN_SECRET);
+    if (!payload.userId) throw Error("Refresh Token Invalid");
+
+    const user = await User.findById(payload.userId);
+    if (!user || user.deleted || user.disabled) throw Error("Usuario inválido");
+
+    const storedToken = await AccessToken.findOneAndDelete({
+      refreshToken: rawRefreshToken,
+      user: user._id,
       deleted: false,
     });
+    if (!storedToken) throw Error("Refresh Token Invalid");
 
-    const { data } = await db.get(req, null, AccessToken);
-
-    refreshTokens = data;
-
-    //remove the old refreshToken from the refreshTokens list
-    const tokensId = [],
-      tokenRefreshLst = [];
-
-    _.each(refreshTokens, function (token, idx) {
-      tokensId.push(ObjectID(token._id));
-      tokenRefreshLst.push(token.refreshToken);
-    });
-
-    if (!tokenRefreshLst.includes(req.body.token))
-      throw Error("Refresh Token Invalid");
-
-    //generate new accessToken and refreshTokens
-    const accessToken = generateAccessToken({ user: req.body.email });
-    const refreshToken = generateRefreshToken({ user: req.body.email });
-
-    req.query.filters = JSON.stringify({ hardDelete: true });
-
-    req.query.items = tokensId;
-
-    await db.delete(req, null, AccessToken);
-
-    req.query.items = null;
-    req.query.filters = JSON.stringify({
-      email: req.body.email,
-    });
-
-    const userData = await db.get(req, null, User);
-    const user = userData?.data[0];
-
-    req.body = {
-      user: user._id,
-      accessToken: accessToken,
-      refreshToken: refreshToken,
+    const nextPayload = {
+      userId: user._id.toString(),
+      user: user.email,
+      role: user.typeUser,
     };
+    const accessToken = generateAccessToken(nextPayload);
+    const refreshToken = generateRefreshToken(nextPayload);
 
-    //guardamos el token en la bd
-    await db.create(req, null, AccessToken);
+    await AccessToken.create({
+      user: user._id,
+      accessToken,
+      refreshToken,
+    });
 
-    res.json({ accessToken: accessToken, refreshToken: refreshToken });
+    return res.json({ accessToken, refreshToken });
   } catch (error) {
-    res.status(400).json({ message: error.message, success: false });
+    return res.status(401).json({ message: error.message, success: false });
   }
 };
 
@@ -401,13 +385,10 @@ function generateAccessToken(payload) {
   });
 }
 
-// refreshTokens
-let refreshTokens = [];
 function generateRefreshToken(payload) {
   const refreshToken = jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, {
-    expiresIn: "20m",
+    expiresIn: "7d",
   });
-  refreshTokens.push(refreshToken);
   return refreshToken;
 }
 
