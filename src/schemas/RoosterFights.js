@@ -46,6 +46,8 @@ const schema = new mongoose.Schema(
       enum: ["0", "1", "3"],
       default: 0,
     },
+    puntuacionVerde: { type: Number, enum: [0, 1, 3], default: null },
+    puntuacionRojo: { type: Number, enum: [0, 1, 3], default: null },
     duracionSegundos: { type: Number, min: 0, default: null },
   },
   {
