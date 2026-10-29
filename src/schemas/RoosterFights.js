@@ -33,7 +33,7 @@ const schema = new mongoose.Schema(
     diferenciaGramos: { type: Number, required: true, min: 0 },
     estado: {
       type: String,
-      enum: ["PROGRAMADA", "EN_CURSO", "FINALIZADA"],
+      enum: ["PROGRAMADA", "EN_CURSO", "FINALIZADA", "CANCELADA"],
       default: "PROGRAMADA",
     },
     resultado: {
