@@ -180,13 +180,6 @@ router.post(
             conflictos,
           );
 
-        const resumenRondas = Object.fromEntries(
-          [...new Set(filas.map((p) => p.ronda))].map((r) => [
-            r,
-            filas.filter((p) => p.ronda === r).length,
-          ]),
-        );
-
         return {
           nuevas,
           documentos,
@@ -194,7 +187,6 @@ router.post(
             totalDetectadas: filas.length,
             nuevas: nuevas.length,
             existentes: documentos.length - nuevas.length,
-            rondas: resumenRondas,
           },
         };
       }
@@ -205,7 +197,12 @@ router.post(
         await RoosterFights.insertMany(plan.nuevas, { ordered: true });
       }
 
-      const resumen = { ...plan.resumen, importadas: plan.nuevas.length };
+      const resumen = {
+        totalDetectadas: plan.resumen.totalDetectadas,
+        nuevas: plan.resumen.nuevas,
+        existentes: plan.resumen.existentes,
+        importadas: plan.nuevas.length,
+      };
       return res.status(200).json({
         message: "Importación completada.",
         resumen,
