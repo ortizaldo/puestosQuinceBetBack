@@ -36,6 +36,7 @@ const schema = new mongoose.Schema(
       enum: ["PROGRAMADA", "EN_CURSO", "FINALIZADA", "CANCELADA"],
       default: "PROGRAMADA",
     },
+    apuestasAbiertas: { type: Boolean, default: false },
     resultado: {
       type: String,
       enum: ["VERDE", "ROJO", "TABLAS", null],
