@@ -32,6 +32,7 @@ import routesBetStubs from "controllers/bet-stubs";
 import routesBrooker from "controllers/brooker";
 import routesBrookerBet from "controllers/brooker-bet";
 import routesEvents from "controllers/events";
+import routesPublicEvents from "controllers/events/public";
 import routesRoosterFights from "controllers/rooster-fights";
 import routesCatalogs from "controllers/catalog";
 import { connectRealtime } from "../modules/realtime";
@@ -70,6 +71,7 @@ router.use("/brooker-bet", auth, routesBrookerBet);
 router
   .route("/events/:id/flyer")
   .post(auth, uploadFlyer.single("flyer"), uploadImage);
+router.use("/public/events", routesPublicEvents);
 router.use(routesImportRoosters);
 router.use(routesImportFights);
 router.use("/events", auth, routesEvents);

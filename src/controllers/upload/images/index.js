@@ -66,8 +66,9 @@ exports.uploadImage = async (req, res) => {
       publicId: result.public_id,
     };
 
+    let updatedEvent;
     try {
-      await db.edit(req, event, Event);
+      updatedEvent = await db.edit(req, event, Event);
       publishRealtimeChange("events", "updated");
     } catch (error) {
       // Evita dejar una imagen nueva sin referencia si falla MongoDB.
@@ -89,7 +90,7 @@ exports.uploadImage = async (req, res) => {
       }
     }
 
-    return res.json({ flyer: event.flyer });
+    return res.json({ flyer: updatedEvent.flyer });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "No se pudo subir el flyer" });
