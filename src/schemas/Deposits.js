@@ -1,4 +1,3 @@
-import { model, Schema, Types } from "mongoose";
 import mongoose from "mongoose";
 import AdminFields from "schemas/definitions/AdminFields";
 import { autoIncrement } from "mongoose-plugin-autoinc";
@@ -7,12 +6,19 @@ const DepositSchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: "user",
       required: true,
       index: true,
     },
-    amount: { type: Number, required: true },
+    amount: {
+      type: Number,
+      required: true,
+      min: 0.01,
+      validate: (value) => Number.isFinite(value) && Math.abs(value * 100 - Math.round(value * 100)) < 1e-6,
+    },
     currency: { type: String, default: "MXN" },
+    depositDate: { type: Date, required: true, default: Date.now },
+    reference: { type: String, trim: true, maxlength: 120, default: "" },
 
     method: {
       type: String,
@@ -20,6 +26,8 @@ const DepositSchema = new mongoose.Schema(
       default: "manual_deposit",
     },
     proofUrl: { type: String }, // link/archivo
+    proofPublicId: { type: String, select: false },
+    proofFileName: { type: String, trim: true },
     trackingKey: { type: String, trim: true, index: true }, // tu “clave de rastreo” si la detectas
 
     status: {
@@ -29,12 +37,15 @@ const DepositSchema = new mongoose.Schema(
       index: true,
     },
 
-    reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: "user" },
     reviewedAt: { type: Date },
     reviewNote: { type: String, trim: true },
   },
   { timestamps: true },
 );
+
+DepositSchema.index({ userId: 1, createdAt: -1 });
+DepositSchema.index({ status: 1, createdAt: -1 });
 
 DepositSchema.add(AdminFields);
 

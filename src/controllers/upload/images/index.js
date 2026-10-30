@@ -19,7 +19,7 @@ exports.upload = multer({
   },
 });
 
-function uploadToCloudinary(fileBuffer) {
+export function uploadToCloudinary(fileBuffer, options = {}) {
   cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
@@ -28,8 +28,8 @@ function uploadToCloudinary(fileBuffer) {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       {
-        folder: "la-angostura/events",
-        resource_type: "image",
+        folder: options.folder || "la-angostura/events",
+        resource_type: options.resourceType || "image",
       },
       (error, result) => {
         if (error) return reject(error);
@@ -38,6 +38,14 @@ function uploadToCloudinary(fileBuffer) {
     );
 
     stream.end(fileBuffer);
+  });
+}
+
+export async function uploadDepositProof(file) {
+  const isPdf = file.mimetype === "application/pdf";
+  return uploadToCloudinary(file.buffer, {
+    folder: "la-angostura/deposits",
+    resourceType: isPdf ? "raw" : "image",
   });
 }
 
