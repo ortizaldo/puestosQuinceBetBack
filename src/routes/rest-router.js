@@ -57,6 +57,10 @@ function RestRouter(modelClassname, options = null, hashPassword = false) {
           : null,
       );
 
+      if (typeof options?.afterCreate === "function") {
+        await options.afterCreate(instance, req);
+      }
+
       notifyChange("created");
 
       res.status(200).json({
@@ -70,6 +74,11 @@ function RestRouter(modelClassname, options = null, hashPassword = false) {
   async function handlerPostMany(req, res) {
     try {
       const result = await db.createMany(req, options, modelClassname);
+      if (typeof options?.afterCreate === "function") {
+        for (const instance of Array.isArray(result) ? result : [result]) {
+          await options.afterCreate(instance, req);
+        }
+      }
       notifyChange("created");
       res.status(200).json({
         data: result,

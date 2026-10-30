@@ -9,7 +9,9 @@
     "watch": "babel-watch src/index",
     "test": "mocha --timeout 60000 --exit",
     "catalogs:import": "babel-node src/scripts/importCatalogs",
-    "catalogs:indexes": "babel-node src/scripts/createIndexes.js"
+    "catalogs:indexes": "babel-node src/scripts/createIndexes.js",
+    "wallet:backfill": "babel-node src/scripts/backfillWallets.js",
+    "wallet:indexes": "babel-node src/scripts/createWalletIndexes.js"
   },
   "keywords": [],
   "author": "",

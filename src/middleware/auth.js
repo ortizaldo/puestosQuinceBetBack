@@ -63,7 +63,7 @@ async function auth(req, res, next) {
     // Carga lo mínimo necesario al request
     req.user = {
       id: user._id.toString(),
-      role: user.role || payload.role, // prioridad a BD
+      role: user.typeUser || user.role || payload.role, // prioridad a BD
     };
 
     return next();

@@ -18,6 +18,7 @@ import routesImportFights from "controllers/operative-events/import-fights";
 import { getEventosKpis } from "controllers/customs/kpi-events";
 import { getRoostersKpis } from "controllers/customs/kpi-operative-events";
 import routesUsers from "controllers/users";
+import routesWallet from "controllers/wallet";
 import routesDerby from "controllers/derby";
 import routesCompadres from "controllers/compadres";
 import routesDerbyConf from "controllers/derby-conf";
@@ -55,6 +56,7 @@ router.route("/send-activation-email/:id").post(handlerActivateEmail);
 //----------------ADMIN-------------------------------
 router.route("/upload").post(login, upload.single("file"));
 router.use("/users", routesUsers);
+router.use("/wallet", routesWallet);
 router.use("/derby", auth, routesDerby);
 router.use("/compadres", auth, routesCompadres);
 router.use("/derby-conf", auth, routesDerbyConf);
