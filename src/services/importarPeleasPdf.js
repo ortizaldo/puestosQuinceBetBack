@@ -70,20 +70,21 @@ export function interpretarPaginas(paginas) {
           );
         if (!cotejo || vistos.has(cotejo))
           throw errorPdf(`Cotejo inválido o repetido: ${cotejo}.`);
-        const gramos = (v) => Number(v.replace(/[.,]/, ""));
+        // El PDF expresa los pesos en kilogramos con tres decimales (p. ej. 2.500).
+        const kilogramos = (v) => Number(v.replace(",", "."));
         actual = {
           cotejo,
           ronda,
           verde: {
             numeroPdf: Number(m[1]),
             nombre: m[2].trim(),
-            peso: gramos(m[3]),
+            peso: kilogramos(m[3]),
             anillo: m[4],
           },
           rojo: {
             numeroPdf: Number(m[7]),
             nombre: m[8].trim(),
-            peso: gramos(m[6]),
+            peso: kilogramos(m[6]),
             anillo: m[5],
           },
         };
@@ -95,8 +96,8 @@ export function interpretarPaginas(paginas) {
         ) {
           throw errorPdf(`Datos inválidos en el cotejo ${cotejo}.`);
         }
-        actual.diferenciaGramos = Math.abs(
-          actual.verde.peso - actual.rojo.peso,
+        actual.diferenciaGramos = Math.round(
+          Math.abs(actual.verde.peso - actual.rojo.peso) * 1000,
         );
         vistos.add(cotejo);
         peleas.push(actual);

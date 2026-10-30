@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 
 import Event from "schemas/Events";
 import Roosters from "schemas/Roosters";
+import { publishRealtimeChange } from "../../../modules/realtime";
 import { extraerParticipantes } from "services/importarParticipantesPdf";
 
 const router = Router();
@@ -128,6 +129,10 @@ router.post(
         ? await Roosters.insertMany(registros, { ordered: true })
         : [];
       const importados = insertados.length;
+
+      if (eliminados.deletedCount || importados) {
+        publishRealtimeChange("participants", "imported");
+      }
 
       return res.status(importados ? 201 : 200).json({
         message: "Importación completada.",

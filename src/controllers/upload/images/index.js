@@ -3,6 +3,7 @@ const express = require("express");
 const multer = require("multer");
 const { v2: cloudinary } = require("cloudinary");
 import Event from "schemas/Events";
+import { publishRealtimeChange } from "../../../modules/realtime";
 
 exports.upload = multer({
   storage: multer.memoryStorage(),
@@ -67,6 +68,7 @@ exports.uploadImage = async (req, res) => {
 
     try {
       await db.edit(req, event, Event);
+      publishRealtimeChange("events", "updated");
     } catch (error) {
       // Evita dejar una imagen nueva sin referencia si falla MongoDB.
       await cloudinary.uploader.destroy(result.public_id);

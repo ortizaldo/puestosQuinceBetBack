@@ -1,9 +1,19 @@
 import { Router } from "express";
 import { resError, db } from "modules";
+import { publishRealtimeChange } from "../modules/realtime";
 import _ from "underscore";
 
 function RestRouter(modelClassname, options = null, hashPassword = false) {
   const router = Router();
+  const resource = {
+    eventos: "events",
+    roosters: "participants",
+    roosterfights: "fights",
+  }[modelClassname.modelName];
+
+  function notifyChange(action) {
+    if (resource) publishRealtimeChange(resource, action);
+  }
   async function handlerGet(req, res) {
     try {
       const response = await db.get(req, options, modelClassname);
@@ -47,6 +57,8 @@ function RestRouter(modelClassname, options = null, hashPassword = false) {
           : null,
       );
 
+      notifyChange("created");
+
       res.status(200).json({
         data: instance,
       });
@@ -58,6 +70,7 @@ function RestRouter(modelClassname, options = null, hashPassword = false) {
   async function handlerPostMany(req, res) {
     try {
       const result = await db.createMany(req, options, modelClassname);
+      notifyChange("created");
       res.status(200).json({
         data: result,
       });
@@ -69,6 +82,7 @@ function RestRouter(modelClassname, options = null, hashPassword = false) {
   async function handlerPatch(req, res) {
     try {
       const instance = await db.edit(req, options, modelClassname);
+      notifyChange("updated");
 
       res.status(200).json({
         data: instance,
@@ -81,6 +95,7 @@ function RestRouter(modelClassname, options = null, hashPassword = false) {
   async function handlerPatchMany(req, res) {
     try {
       const updatedResult = await db.updateMany(req, options, modelClassname);
+      notifyChange("updated");
       res.status(200).json({
         data: updatedResult,
       });
@@ -92,6 +107,7 @@ function RestRouter(modelClassname, options = null, hashPassword = false) {
   async function handlerDelete(req, res) {
     try {
       const instance = await db.delete(req, options, modelClassname);
+      notifyChange("deleted");
       res.status(200).json({
         data: instance,
       });

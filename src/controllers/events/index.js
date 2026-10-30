@@ -29,7 +29,6 @@ const router = RestRouter(Events, {
 
   afterGetAll: async (events) => {
     if (_.isArray(events)) {
-      console.log("🚀 ~ events:", events);
       const eventPromises = events.map(async (event) => {
         const numeroParticipantes = await Roosters.countDocuments({
           event: castId(event._id),

@@ -34,8 +34,11 @@ import routesBrookerBet from "controllers/brooker-bet";
 import routesEvents from "controllers/events";
 import routesRoosterFights from "controllers/rooster-fights";
 import routesCatalogs from "controllers/catalog";
+import { connectRealtime } from "../modules/realtime";
 
 const router = Router();
+
+router.get("/realtime", connectRealtime);
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });

@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 import Event from "schemas/Events";
 import RoosterFights from "schemas/RoosterFights";
 import Roosters from "schemas/Roosters";
+import { publishRealtimeChange } from "../../../modules/realtime";
 // import { extraerParticipantes } from "services/importarParticipantesPdf";
 import {
   extraerPeleas,
@@ -195,6 +196,7 @@ router.post(
 
       if (plan.nuevas.length) {
         await RoosterFights.insertMany(plan.nuevas, { ordered: true });
+        publishRealtimeChange("fights", "imported");
       }
 
       const resumen = {
