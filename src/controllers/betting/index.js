@@ -20,6 +20,49 @@ function cents(value) {
   return NaN;
 }
 
+function rosterId(side) {
+  const id = side?._id?._id || side?._id || side?.id;
+  return id == null ? "" : String(id);
+}
+
+function participantStats(roosterIdValue, currentRound, eventFights) {
+  const stats = { wins: 0, draws: 0, losses: 0, points: 0 };
+  const upcoming = [];
+
+  for (const fight of eventFights) {
+    const redId = rosterId(fight.rojo);
+    const greenId = rosterId(fight.verde);
+    const isRed = redId === roosterIdValue;
+    const isGreen = greenId === roosterIdValue;
+    if (!isRed && !isGreen) continue;
+
+    if (fight.estado === "FINALIZADA" && Number(fight.ronda) <= currentRound) {
+      const outcome = fight.resultado;
+      const explicitPoints = isRed ? fight.puntuacionRojo : fight.puntuacionVerde;
+      const pointsByOutcome = outcome === "TABLAS" ? 1 : (outcome === (isRed ? "ROJO" : "VERDE") ? 3 : 0);
+      const points = explicitPoints == null ? pointsByOutcome : Number(explicitPoints);
+      stats.points += Number.isFinite(points) ? points : pointsByOutcome;
+
+      if (outcome === "TABLAS" || points === 1) stats.draws += 1;
+      else if (outcome === (isRed ? "ROJO" : "VERDE") || points === 3) stats.wins += 1;
+      else stats.losses += 1;
+      continue;
+    }
+
+    if (Number(fight.ronda) > currentRound && ["PROGRAMADA", "EN_CURSO"].includes(fight.estado)) {
+      upcoming.push({
+        ronda: fight.ronda,
+        cotejo: fight.cotejo,
+        estado: fight.estado,
+        opponent: isRed ? (fight.verde?._id?.nombre || "Rival por confirmar") : (fight.rojo?._id?.nombre || "Rival por confirmar"),
+      });
+    }
+  }
+
+  upcoming.sort((a, b) => Number(a.ronda) - Number(b.ronda) || Number(a.cotejo) - Number(b.cotejo));
+  return { stats, upcoming: upcoming.slice(0, 3) };
+}
+
 router.post("/fights/:fightId/bets", auth, async (req, res) => {
   try {
     const riskCents = cents(req.body?.riskCents);
@@ -43,9 +86,22 @@ router.get("/fights/:fightId/bets/context", auth, async (req, res) => {
     if (!fight) {
       const error = new Error("No se encontró la pelea."); error.status = 404; error.code = "FIGHT_NOT_FOUND"; throw error;
     }
+    const eventId = fight.event?._id || fight.event;
+    const [redId, greenId] = [rosterId(fight.rojo), rosterId(fight.verde)];
+    const eventFights = await RoosterFights.find({ event: eventId, deleted: { $ne: true } })
+      .select("cotejo ronda estado resultado puntuacionRojo puntuacionVerde rojo verde")
+      .populate("rojo._id", "nombre")
+      .populate("verde._id", "nombre")
+      .sort({ ronda: 1, cotejo: 1 })
+      .lean();
+    const participants = {
+      red: participantStats(redId, Number(fight.ronda), eventFights),
+      green: participantStats(greenId, Number(fight.ronda), eventFights),
+    };
     res.json({ success: true, data: {
       fight,
       event: fight.event || null,
+      participants,
       wallet: wallet && {
         availableBalanceCents: wallet.balanceCents || 0,
         reservedBalanceCents: wallet.reservedBalanceCents || 0,
@@ -76,8 +132,30 @@ router.put("/admin/betting-config", auth, requireRole("ADMIN"), async (req, res)
     const config = await BettingConfig.findByIdAndUpdate("global", {
       $set: { minimumBetCents, commissionBps, updatedBy: req.user.id },
     }, { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true }).lean();
+    const openFights = await RoosterFights.find({ apuestasAbiertas: true, bettingStatus: "OPEN", estado: "PROGRAMADA" }).select("_id bettingVersion").lean();
+    let updatedOpenMarkets = 0;
+    if (openFights.length) {
+      const fightIds = openFights.map((fight) => fight._id);
+      const [orderFightIds, matchFightIds] = await Promise.all([
+        BetOrder.distinct("fightId", { fightId: { $in: fightIds } }),
+        BetMatch.distinct("fightId", { fightId: { $in: fightIds } }),
+      ]);
+      const hasBettingActivity = new Set([...orderFightIds, ...matchFightIds].map(String));
+      for (const fight of openFights) {
+        if (hasBettingActivity.has(String(fight._id))) continue;
+        const result = await RoosterFights.updateOne({
+          _id: fight._id,
+          apuestasAbiertas: true,
+          bettingStatus: "OPEN",
+          estado: "PROGRAMADA",
+          bettingVersion: fight.bettingVersion,
+          bettingCommissionBps: { $ne: commissionBps },
+        }, { $set: { bettingCommissionBps: commissionBps }, $inc: { bettingVersion: 1 } });
+        updatedOpenMarkets += result.modifiedCount || 0;
+      }
+    }
     publishRealtimeChange("bets", "minimum_updated");
-    res.json({ success: true, data: { minimumBetCents: config.minimumBetCents, commissionBps: config.commissionBps } });
+    res.json({ success: true, data: { minimumBetCents: config.minimumBetCents, commissionBps: config.commissionBps, updatedOpenMarkets } });
   } catch (error) { sendError(res, error); }
 });
 

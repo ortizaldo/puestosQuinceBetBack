@@ -268,9 +268,13 @@ export async function setBettingOpen({ fightId, open, actorId }) {
       if (open) {
         const current = await RoosterFights.findById(fightId).select("bettingCommissionBps").session(session);
         if (!current) throw fail(404, "FIGHT_NOT_FOUND", "No se encontró la pelea.");
+        const hasExistingMatches = await BetMatch.exists({ fightId }).session(session);
+        const commissionBps = hasExistingMatches
+          ? configuredCommissionRate(current.bettingCommissionBps, configuredBps)
+          : configuredBps;
         const fight = await RoosterFights.findOneAndUpdate(
           { _id: fightId, estado: "PROGRAMADA", ...closedBettingStatus, apuestasAbiertas: { $ne: true } },
-          { $set: { bettingStatus: "OPEN", apuestasAbiertas: true, bettingClosedAt: null, bettingCommissionBps: configuredCommissionRate(current.bettingCommissionBps, configuredBps) }, $inc: { bettingVersion: 1 } },
+          { $set: { bettingStatus: "OPEN", apuestasAbiertas: true, bettingClosedAt: null, bettingCommissionBps: commissionBps }, $inc: { bettingVersion: 1 } },
           { new: true, session, runValidators: true },
         );
         if (!fight) throw fail(409, "CANNOT_OPEN_BETTING", "No se puede abrir apuestas para esta pelea.");
