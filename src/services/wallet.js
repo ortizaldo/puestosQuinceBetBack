@@ -6,7 +6,7 @@ export async function ensureWallet(userId) {
   try {
     return await Wallet.findOneAndUpdate(
       { userId },
-      { $setOnInsert: { userId, balanceCents: 0, currency: "MXN" } },
+      { $setOnInsert: { userId, balanceCents: 0, reservedBalanceCents: 0, inPlayBalanceCents: 0, currency: "MXN" } },
       { upsert: true, new: true, setDefaultsOnInsert: true },
     );
   } catch (error) {
@@ -96,7 +96,7 @@ export function registerDebit(options) {
 
 export async function getWallet(userId) {
   const wallet = await ensureWallet(userId);
-  return { ...wallet.toObject(), balance: wallet.balanceCents / 100 };
+  return { ...wallet.toObject(), availableBalanceCents: wallet.balanceCents, reservedBalanceCents: wallet.reservedBalanceCents || 0, inPlayBalanceCents: wallet.inPlayBalanceCents || 0, balance: wallet.balanceCents / 100 };
 }
 
 export async function getMovements(userId, { page = 1, limit = 5, type, from, to } = {}) {
@@ -112,5 +112,5 @@ export async function getMovements(userId, { page = 1, limit = 5, type, from, to
     WalletTransaction.find(query).sort({ occurredAt: -1 }).skip((safePage - 1) * safeLimit).limit(safeLimit).lean(),
     WalletTransaction.countDocuments(query),
   ]);
-  return { items: items.map((item) => ({ ...item, amount: item.amountCents / 100, balanceAfter: item.balanceAfterCents / 100 })), total, page: safePage, limit: safeLimit };
+  return { items: items.map((item) => ({ ...item, amount: item.amountCents / 100, balanceAfter: item.balanceAfterCents / 100, movementDirection: Number.isFinite(item.balanceBeforeCents) ? (item.balanceAfterCents > item.balanceBeforeCents ? "CREDIT" : item.balanceAfterCents < item.balanceBeforeCents ? "DEBIT" : "INFO") : item.type })), total, page: safePage, limit: safeLimit };
 }

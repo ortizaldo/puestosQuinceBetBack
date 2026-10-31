@@ -37,6 +37,10 @@ const schema = new mongoose.Schema(
       default: "PROGRAMADA",
     },
     apuestasAbiertas: { type: Boolean, default: false },
+    bettingStatus: { type: String, enum: ["CLOSED", "OPEN", "BETTING_CLOSED", "SETTLED"], default: "CLOSED", index: true },
+    bettingVersion: { type: Number, default: 0, min: 0 },
+    bettingClosedAt: { type: Date, default: null },
+    bettingCommissionBps: { type: Number, min: 0, max: 10000, default: null },
     resultado: {
       type: String,
       enum: ["VERDE", "ROJO", "TABLAS", null],

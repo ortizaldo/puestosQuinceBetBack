@@ -17,6 +17,7 @@ import routesImportRoosters from "controllers/operative-events/import-roosters";
 import routesImportFights from "controllers/operative-events/import-fights";
 import { getEventosKpis } from "controllers/customs/kpi-events";
 import { getRoostersKpis } from "controllers/customs/kpi-operative-events";
+import routesDashboard from "controllers/customs/dashboard";
 import routesUsers from "controllers/users";
 import routesWallet from "controllers/wallet";
 import routesDeposits from "controllers/deposits";
@@ -33,6 +34,7 @@ import routesCompany from "controllers/company";
 import routesBetStubs from "controllers/bet-stubs";
 import routesBrooker from "controllers/brooker";
 import routesBrookerBet from "controllers/brooker-bet";
+import routesBetting from "controllers/betting";
 import routesEvents from "controllers/events";
 import routesPublicEvents from "controllers/events/public";
 import routesRoosterFights from "controllers/rooster-fights";
@@ -72,6 +74,7 @@ router.use("/companies", auth, routesCompany);
 router.use("/bet-stubs", auth, routesBetStubs);
 router.use("/brooker", auth, routesBrooker);
 router.use("/brooker-bet", auth, routesBrookerBet);
+router.use(routesBetting);
 router
   .route("/events/:id/flyer")
   .post(auth, uploadFlyer.single("flyer"), uploadImage);
@@ -82,6 +85,7 @@ router.use("/events", auth, routesEvents);
 router.use("/rooster-fights", auth, routesRoosterFights);
 router.route("/event-kpis").get(auth, getEventosKpis);
 router.route("/event-kpi-roosters/:id").get(getRoostersKpis);
+router.use("/dashboard-summary", routesDashboard);
 router.use("/catalogs", auth, routesCatalogs);
 
 export default router;

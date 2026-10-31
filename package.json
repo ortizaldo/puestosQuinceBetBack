@@ -7,11 +7,13 @@
     "start": "node src/index",
     "dev": "nodemon src/index",
     "watch": "babel-watch src/index",
-    "test": "mocha --timeout 60000 --exit",
+    "test": "mocha --timeout 60000 --exit --require @babel/register",
     "catalogs:import": "babel-node src/scripts/importCatalogs",
     "catalogs:indexes": "babel-node src/scripts/createIndexes.js",
     "wallet:backfill": "babel-node src/scripts/backfillWallets.js",
-    "wallet:indexes": "babel-node src/scripts/createWalletIndexes.js"
+    "wallet:indexes": "babel-node src/scripts/createWalletIndexes.js",
+    "wallet:betting-backfill": "babel-node src/scripts/backfillBettingWallets.js",
+    "betting:indexes": "babel-node src/scripts/createBettingIndexes.js"
   },
   "keywords": [],
   "author": "",

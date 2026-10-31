@@ -45,6 +45,7 @@ function RestRouter(modelClassname, options = null, hashPassword = false) {
 
   async function handlerPost(req, res) {
     try {
+      if (typeof options?.beforeCreate === "function") await options.beforeCreate(req);
       req.hashPassword = hashPassword;
       const instance = await db.create(
         req,
@@ -73,6 +74,7 @@ function RestRouter(modelClassname, options = null, hashPassword = false) {
 
   async function handlerPostMany(req, res) {
     try {
+      if (typeof options?.beforeCreateMany === "function") await options.beforeCreateMany(req);
       const result = await db.createMany(req, options, modelClassname);
       if (typeof options?.afterCreate === "function") {
         for (const instance of Array.isArray(result) ? result : [result]) {
@@ -90,6 +92,7 @@ function RestRouter(modelClassname, options = null, hashPassword = false) {
 
   async function handlerPatch(req, res) {
     try {
+      if (typeof options?.beforeEdit === "function") await options.beforeEdit(req);
       const instance = await db.edit(req, options, modelClassname);
       notifyChange("updated");
 
@@ -103,6 +106,7 @@ function RestRouter(modelClassname, options = null, hashPassword = false) {
 
   async function handlerPatchMany(req, res) {
     try {
+      if (typeof options?.beforeEditMany === "function") await options.beforeEditMany(req);
       const updatedResult = await db.updateMany(req, options, modelClassname);
       notifyChange("updated");
       res.status(200).json({
@@ -115,6 +119,7 @@ function RestRouter(modelClassname, options = null, hashPassword = false) {
 
   async function handlerDelete(req, res) {
     try {
+      if (typeof options?.beforeDelete === "function") await options.beforeDelete(req);
       const instance = await db.delete(req, options, modelClassname);
       notifyChange("deleted");
       res.status(200).json({
