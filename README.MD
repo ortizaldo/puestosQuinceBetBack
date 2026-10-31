@@ -46,7 +46,8 @@ El módulo de apuestas escribe importes en **centavos enteros**. El `Wallet.bala
 - **Agarro 80 (`TAKE_80`)**: por cada unidad se arriesgan $80.00 para ganar $100.00.
 - Cada unidad `GIVE_80` debe ser un múltiplo de 10,000 centavos y cada unidad `TAKE_80` de 8,000 centavos. Los remanentes menores quedan pendientes; no se crean fracciones de centavo. Los emparejamientos parciales respetan el mismo ratio.
 - Los cotejos se toman por `createdAt` ascendente y `_id` ascendente. No se cotejan órdenes del mismo usuario.
-- La comisión se calcula sobre ganancia bruta únicamente, nunca sobre capital devuelto. Al abrir apuestas se toma una copia de `BET_COMMISSION_BPS` en la pelea (puntos base; por defecto `0`, máximo `10000`) y queda fija para su liquidación. Se redondea al centavo más cercano, empate hacia arriba.
+- La comisión se configura en **Reglas de apuestas** (solo ADMIN), se expresa como porcentaje de la ganancia bruta del ganador y nunca se descuenta del capital devuelto. Al abrir el mercado se copia a la pelea y queda fija hasta liquidarla. Si aún no existe una configuración guardada, se conserva `BET_COMMISSION_BPS` como valor inicial/fallback (por defecto `0`, máximo `10000`). Se redondea al centavo más cercano, empate hacia arriba.
+- El monto mínimo global de las nuevas apuestas también se administra en **Reglas de apuestas**, se guarda en MongoDB y por defecto es $1 MXN. “Doy 80” y “Agarro 80” además deben respetar sus múltiplos de $100 y $80, redondeando hacia arriba el mínimo efectivo para cada modalidad.
 
 Todas las acciones financieras y el estado de la pelea se escriben en transacciones MongoDB. Se requiere replica set o `mongos`. Un registro `WalletTransaction` documenta cada reserva, cambio de bucket, liberación, devolución de capital, ganancia, pérdida o comisión. `balanceBeforeCents` y `balanceAfterCents` representan el saldo disponible; el detalle de los tres buckets queda en `metadata`. Las ganancias y liberaciones usan tipos distintos.
 
@@ -84,7 +85,7 @@ npm run wallet:betting-backfill
 npm run betting:indexes
 ```
 
-El primer comando inicializa buckets reservados/en juego en cero y traduce `apuestasAbiertas` heredado a `bettingStatus`, sin modificar `balanceCents`. El segundo crea índices FIFO, referencias e idempotencia. Define `BET_COMMISSION_BPS` conforme a la regla acordada por el negocio antes de abrir cada pelea; el valor predeterminado de código no cobra comisión.
+El primer comando inicializa buckets reservados/en juego en cero y traduce `apuestasAbiertas` heredado a `bettingStatus`, sin modificar `balanceCents`. El segundo crea índices FIFO, referencias e idempotencia. Si la configuración de comisión aún no se guarda desde administración, el valor inicial se toma de `BET_COMMISSION_BPS`; el valor predeterminado de código no cobra comisión.
 
 Las pruebas unitarias funcionan con `npm test`. La suite de servicio transaccional requiere una URI de réplica aislada cuyo nombre de base incluya `betting_test`; la suite crea y elimina únicamente `betting_test_<pid>`:
 

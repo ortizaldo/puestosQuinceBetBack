@@ -5,6 +5,7 @@ import Wallet from "schemas/Wallet";
 import WalletTransaction from "schemas/WalletTransaction";
 import User from "schemas/Users";
 import RoosterFights from "schemas/RoosterFights";
+import BettingConfig from "schemas/BettingConfig";
 import { compatibleMarket, compatibleSide, commissionForProfit, matchedRisks, orderStatus, profitForRisk } from "./bet-calculations";
 
 const MAX_SAFE = Number.MAX_SAFE_INTEGER;
@@ -16,16 +17,34 @@ const closedBettingStatus = { $or: [
   { bettingStatus: { $exists: false } },
   { bettingStatus: null },
 ] };
-function configuredCommissionRate(existingRate = null) {
+function configuredCommissionRate(existingRate = null, fallbackRate = null) {
   if (Number.isInteger(existingRate) && existingRate >= 0 && existingRate <= 10000) return existingRate;
+  if (Number.isInteger(fallbackRate) && fallbackRate >= 0 && fallbackRate <= 10000) return fallbackRate;
   const configured = Number(process.env.BET_COMMISSION_BPS || 0);
   if (!Number.isInteger(configured) || configured < 0 || configured > 10000) throw fail(500, "INVALID_COMMISSION_CONFIG", "BET_COMMISSION_BPS debe ser un entero entre 0 y 10000.");
   return configured;
 }
 
-function validateRisk(marketType, amount) {
+export async function getConfiguredCommissionBps() {
+  const config = await BettingConfig.findById("global").select("commissionBps").lean();
+  if (config?.commissionBps !== undefined && config?.commissionBps !== null) return configuredCommissionRate(config.commissionBps);
+  return configuredCommissionRate();
+}
+
+export async function getMinimumBetCents() {
+  const config = await BettingConfig.findById("global").select("minimumBetCents").lean();
+  return config?.minimumBetCents || 100;
+}
+
+function minimumForMarket(marketType, configuredMinimumCents) {
+  const unit = marketType === "GIVE_80" ? 10000 : marketType === "TAKE_80" ? 8000 : 100;
+  const minimum = Math.max(configuredMinimumCents, unit);
+  return Math.ceil(minimum / unit) * unit;
+}
+
+function validateRisk(marketType, amount, configuredMinimumCents) {
   if (!Number.isSafeInteger(amount) || amount <= 0) throw fail(400, "INVALID_RISK", "La cantidad debe ser un entero positivo en centavos.");
-  const minimum = marketType === "GIVE_80" ? 10000 : marketType === "TAKE_80" ? 8000 : 100;
+  const minimum = minimumForMarket(marketType, configuredMinimumCents);
   if (amount < minimum) throw fail(400, "RISK_TOO_SMALL", `El riesgo mínimo para esta modalidad es de ${minimum} centavos.`);
   try { profitForRisk(marketType, amount); } catch (error) { throw fail(400, "INVALID_RISK_UNIT", error.message); }
   if (amount > 100000000000) throw fail(400, "RISK_TOO_LARGE", "La cantidad supera el máximo permitido.");
@@ -115,7 +134,7 @@ export async function createBetOrder({ userId, fightId, participantSide, marketT
   if (!validId(fightId)) throw fail(400, "INVALID_FIGHT_ID", "Identificador de pelea inválido.");
   if (!["RED", "GREEN"].includes(participantSide)) throw fail(400, "INVALID_SIDE", "Selecciona rojo o verde.");
   if (!["EVEN", "GIVE_80", "TAKE_80"].includes(marketType)) throw fail(400, "INVALID_MARKET", "Modalidad de apuesta inválida.");
-  validateRisk(marketType, riskCents);
+  validateRisk(marketType, riskCents, await getMinimumBetCents());
   const user = await User.findById(userId).select("status");
   if (!user || user.status !== "ACTIVE") throw fail(403, "USER_NOT_ACTIVE", "La cuenta debe estar activa para apostar.");
   const session = await mongoose.startSession();
@@ -241,6 +260,7 @@ export async function cancelPendingBet({ userId, betId }) {
 
 export async function setBettingOpen({ fightId, open, actorId }) {
   if (!validId(fightId)) throw fail(400, "INVALID_FIGHT_ID", "Identificador de pelea inválido.");
+  const configuredBps = open ? await getConfiguredCommissionBps() : null;
   const session = await mongoose.startSession();
   let result;
   try {
@@ -250,7 +270,7 @@ export async function setBettingOpen({ fightId, open, actorId }) {
         if (!current) throw fail(404, "FIGHT_NOT_FOUND", "No se encontró la pelea.");
         const fight = await RoosterFights.findOneAndUpdate(
           { _id: fightId, estado: "PROGRAMADA", ...closedBettingStatus, apuestasAbiertas: { $ne: true } },
-          { $set: { bettingStatus: "OPEN", apuestasAbiertas: true, bettingClosedAt: null, bettingCommissionBps: configuredCommissionRate(current.bettingCommissionBps) }, $inc: { bettingVersion: 1 } },
+          { $set: { bettingStatus: "OPEN", apuestasAbiertas: true, bettingClosedAt: null, bettingCommissionBps: configuredCommissionRate(current.bettingCommissionBps, configuredBps) }, $inc: { bettingVersion: 1 } },
           { new: true, session, runValidators: true },
         );
         if (!fight) throw fail(409, "CANNOT_OPEN_BETTING", "No se puede abrir apuestas para esta pelea.");
@@ -316,6 +336,7 @@ export async function settleFight({ fightId, outcome, actorId, fightStats = {} }
   if (fightStats.puntuacion !== undefined && !["0", "1", "3"].includes(String(fightStats.puntuacion))) throw fail(400, "INVALID_FIGHT_STATS", "La puntuación de pelea no es válida.");
   for (const key of ["puntuacionVerde", "puntuacionRojo"]) if (fightStats[key] !== undefined && ![0, 1, 3].includes(fightStats[key])) throw fail(400, "INVALID_FIGHT_STATS", "La puntuación de pelea no es válida.");
   const normalized = outcomes[outcome];
+  const configuredBps = await getConfiguredCommissionBps();
   const session = await mongoose.startSession();
   let result;
   try {
@@ -332,7 +353,7 @@ export async function settleFight({ fightId, outcome, actorId, fightStats = {} }
       }
       const matches = await BetMatch.find({ fightId, status: "IN_PLAY" }).sort({ createdAt: 1, _id: 1 }).session(session);
       const hasRefund = normalized === "DRAW" || normalized === "CANCELLED";
-      const bps = configuredCommissionRate(fight.bettingCommissionBps);
+      const bps = configuredCommissionRate(fight.bettingCommissionBps, configuredBps);
       let winningCents = 0;
       let refundedCents = 0;
       for (const match of matches) {
@@ -379,15 +400,17 @@ export async function settleFight({ fightId, outcome, actorId, fightStats = {} }
 
 export async function getBetMarket(fightId) {
   if (!validId(fightId)) throw fail(400, "INVALID_FIGHT_ID", "Identificador de pelea inválido.");
-  const [fight, orders, matches] = await Promise.all([
+  const [fight, orders, matches, minimumBetCents, configuredBps] = await Promise.all([
     RoosterFights.findById(fightId).select("bettingCommissionBps").lean(),
     BetOrder.aggregate([{ $match: { fightId: oid(fightId), status: { $in: ["PENDING", "PARTIALLY_MATCHED"] } } }, { $group: { _id: { side: "$participantSide", market: "$marketType" }, pendingCents: { $sum: "$pendingRiskAmount" }, matchedCents: { $sum: "$matchedRiskAmount" }, orders: { $sum: 1 } } }]),
     BetMatch.aggregate([{ $match: { fightId: oid(fightId) } }, { $group: { _id: "$status", redCents: { $sum: "$redRiskAmount" }, greenCents: { $sum: "$greenRiskAmount" }, count: { $sum: 1 } } }]),
+    getMinimumBetCents(),
+    getConfiguredCommissionBps(),
   ]);
   if (!fight) throw fail(404, "FIGHT_NOT_FOUND", "No se encontró la pelea.");
   if (!fight) throw fail(404, "FIGHT_NOT_FOUND", "No se encontró la pelea.");
-  const commissionBps = configuredCommissionRate(fight.bettingCommissionBps);
-  return { orders, matches, commissionBps };
+  const commissionBps = configuredCommissionRate(fight.bettingCommissionBps, configuredBps);
+  return { orders, matches, commissionBps, minimumBetCents };
 }
 
 export async function getUserBets(userId, fightId, { page = 1, limit = 100 } = {}) {
