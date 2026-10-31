@@ -43,6 +43,6 @@ export function connectRealtime(req, res) {
   res.on("close", cleanup);
 }
 
-export function publishRealtimeChange(resource, action) {
-  sendToClients({ resource, action, occurredAt: new Date().toISOString() });
+export function publishRealtimeChange(resource, action, details = {}) {
+  sendToClients({ resource, action, ...details, occurredAt: new Date().toISOString() });
 }

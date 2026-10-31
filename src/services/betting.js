@@ -426,9 +426,18 @@ export async function getUserBets(userId, fightId, { page = 1, limit = 100 } = {
     BetOrder.find(filter).sort({ createdAt: -1, _id: -1 }).skip((safePage - 1) * safeLimit).limit(safeLimit).lean(),
     BetOrder.countDocuments(filter),
   ]);
+  const fightIds = [...new Set(orders.map((order) => String(order.fightId)))];
+  const fights = fightIds.length ? await RoosterFights.find({ _id: { $in: fightIds } })
+    .select("cotejo ronda event rojo verde")
+    .populate("event", "nombre")
+    .populate("rojo._id", "nombre")
+    .populate("verde._id", "nombre")
+    .lean() : [];
+  const fightsById = new Map(fights.map((fight) => [String(fight._id), fight]));
+  const ordersWithFight = orders.map((order) => ({ ...order, fight: fightsById.get(String(order.fightId)) || null }));
   const ids = orders.map((order) => order._id);
   const matches = await BetMatch.find({ $or: [{ redOrderId: { $in: ids } }, { greenOrderId: { $in: ids } }] }).sort({ createdAt: 1 }).lean();
-  return { orders, matches: matches.map((match) => privateMatch(match, userId)), total, page: safePage, limit: safeLimit, pages: Math.ceil(total / safeLimit) };
+  return { orders: ordersWithFight, matches: matches.map((match) => privateMatch(match, userId)), total, page: safePage, limit: safeLimit, pages: Math.ceil(total / safeLimit) };
 }
 
 export async function getBetDetail(userId, betId, isAdmin = false) {

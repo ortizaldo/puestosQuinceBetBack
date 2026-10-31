@@ -72,6 +72,12 @@ const schema = new mongoose.Schema(
       },
     },
 
+    streamUrl: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
     status: {
       type: String,
       enum: [
